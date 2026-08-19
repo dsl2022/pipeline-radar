@@ -27,19 +27,28 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: pipeline-radar/package-lock.json
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.9.8
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      # Without this the action fails with an opaque "Could not load credentials
+      # from any providers" - the real cause is a bootstrap step that never ran.
+      - name: Check deploy role is configured
+        run: |
+          if [ -z "${{ vars.AWS_DEPLOY_ROLE_ARN }}" ]; then
+            echo "::error::AWS_DEPLOY_ROLE_ARN repo variable is not set. Apply terraform/bootstrap, then: gh variable set AWS_DEPLOY_ROLE_ARN --body \"\$(terraform output -raw deploy_role_arn)\""
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}

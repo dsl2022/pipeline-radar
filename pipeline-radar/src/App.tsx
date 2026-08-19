@@ -27,6 +27,10 @@ import './App.css';
 // past this, narrowing with filters is the honest tool.
 const MAX_TRIALS = 1000;
 
+// Stable reference for the no-results case: a fresh [] each render would make
+// every downstream useMemo/useEffect that depends on it re-run every render.
+const NO_TRIALS: Trial[] = [];
+
 // Enrichment callbacks fire synchronously per row for cached names; one
 // setState-with-full-Map-copy per row is O(n²) element copies on a replay over
 // a few hundred drugs. Buffer results and flush once per microtask instead —
@@ -133,7 +137,7 @@ export default function App() {
     });
   }
 
-  const allTrials = state.kind === 'results' ? state.trials : [];
+  const allTrials = state.kind === 'results' ? state.trials : NO_TRIALS;
 
   const filtered = useMemo(
     () => filterTrials(allTrials, { phases: selectedPhases, statuses: selectedStatuses }),

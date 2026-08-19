@@ -22,7 +22,9 @@ const CP1252_MAPPED = new Set(
 );
 
 export function winAnsiSafe(s: string): string {
-  return s.replace(/[^\x00-\xFF]/g, (ch) =>
+  // Everything above U+00FF, matched by code point (the `u` flag keeps astral
+  // characters whole rather than replacing each surrogate half separately).
+  return s.replace(/[\u{100}-\u{10FFFF}]/gu, (ch) =>
     CP1252_MAPPED.has(ch) ? ch : (TRANSLITERATE[ch] ?? '?'),
   );
 }
