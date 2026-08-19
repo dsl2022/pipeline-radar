@@ -1,0 +1,209 @@
+{
+  "rxcuiJoin": {
+    "carboplatin": {
+      "cui": "40048",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "pembrolizumab": {
+      "cui": "1547545",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "pemetrexed": {
+      "cui": "68446",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "durvalumab": {
+      "cui": "1919503",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "osimertinib": {
+      "cui": "1721560",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "nivolumab": {
+      "cui": "1597876",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "gemcitabine": {
+      "cui": "12574",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "anlotinib_INV": {
+      "cui": "1939861",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    },
+    "camrelizumab_INV": {
+      "cui": "2169823",
+      "status": 404,
+      "total": 0,
+      "matchedGeneric": null
+    }
+  },
+  "batch": {
+    "space-list": {
+      "status": 404,
+      "total": 0,
+      "generics": []
+    },
+    "plus-OR": {
+      "status": 404,
+      "total": 0,
+      "generics": []
+    },
+    "explicit-OR": {
+      "status": 404,
+      "total": 0,
+      "generics": []
+    },
+    "generic-space-list": {
+      "status": 200,
+      "total": 4,
+      "generics": [
+        "PEMBROLIZUMAB",
+        "PEMBROLIZUMAB AND BERAHYALURONIDASE ALFA-PMPH",
+        "DURVALUMAB",
+        "OSIMERTINIB"
+      ]
+    }
+  },
+  "carboplatin": {
+    "total": 9,
+    "kinds": {
+      "ANDA": 8,
+      "NDA2": 1
+    },
+    "earliestOrigAP": "20041014",
+    "sample": [
+      {
+        "app": "ANDA077059",
+        "sponsor": "HOSPIRA",
+        "origDates": [
+          "20041123"
+        ]
+      },
+      {
+        "app": "ANDA076517",
+        "sponsor": "HOSPIRA",
+        "origDates": [
+          "20041014"
+        ]
+      },
+      {
+        "app": "ANDA206775",
+        "sponsor": "ACCORD HLTHCARE",
+        "origDates": [
+          "20170209"
+        ]
+      }
+    ]
+  },
+  "sortSupport": {
+    "status": 200,
+    "error": null
+  },
+  "approvalDates": {
+    "pembrolizumab": {
+      "total": 2,
+      "recs": [
+        {
+          "app": "BLA125514",
+          "sponsor": "MERCK SHARP DOHME",
+          "marketing": "Prescription",
+          "origAP": "20140904",
+          "hasSubmissions": true
+        },
+        {
+          "app": "BLA761467",
+          "sponsor": "MERCK SHARP DOHME",
+          "marketing": "Prescription",
+          "origAP": "20250919",
+          "hasSubmissions": true
+        }
+      ]
+    },
+    "osimertinib": {
+      "total": 1,
+      "recs": [
+        {
+          "app": "NDA208065",
+          "sponsor": "ASTRAZENECA",
+          "marketing": "Prescription",
+          "origAP": "20151113",
+          "hasSubmissions": true
+        }
+      ]
+    },
+    "durvalumab": {
+      "total": 1,
+      "recs": [
+        {
+          "app": "BLA761069",
+          "sponsor": "ASTRAZENECA UK LTD",
+          "marketing": "Prescription",
+          "origAP": "20170501",
+          "hasSubmissions": true
+        }
+      ]
+    }
+  },
+  "aeShape": {
+    "status": 200,
+    "top5": [
+      {
+        "term": "DEATH",
+        "count": 11462
+      },
+      {
+        "term": "MALIGNANT NEOPLASM PROGRESSION",
+        "count": 3354
+      },
+      {
+        "term": "DIARRHOEA",
+        "count": 1677
+      },
+      {
+        "term": "DRUG RESISTANCE",
+        "count": 1096
+      },
+      {
+        "term": "FATIGUE",
+        "count": 1037
+      }
+    ]
+  },
+  "aeSerious": {
+    "status": 404,
+    "total": 0
+  },
+  "aeAll": {
+    "status": 200,
+    "total": 31866
+  },
+  "comboNoise": {
+    "total": 3,
+    "brands": [
+      "OPDUALAG",
+      "OPDIVO",
+      "OPDIVO QVANTIG"
+    ]
+  },
+  "cors": {
+    "allowOrigin": "*"
+  }
+}

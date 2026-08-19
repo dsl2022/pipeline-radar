@@ -1,0 +1,93 @@
+# Deploy on push to main: the CI gate first, then terraform apply via GitHub
+# OIDC - no stored AWS keys anywhere. AWS_DEPLOY_ROLE_ARN is a repo *variable*
+# holding the role ARN output by terraform/bootstrap.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false # queue deploys, never run two at once
+
+permissions:
+  id-token: write # OIDC token for configure-aws-credentials
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT: pipeline-radar
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pipeline-radar/package-lock.json
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Resolve account id
+        run: echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_ENV"
+
+      # The task definition references an image tag, so the image has to exist
+      # in ECR before apply runs. The ECR repo itself comes from the bootstrap
+      # layer, which is applied once by hand.
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build and push API image
+        working-directory: api
+        run: |
+          IMAGE="${{ steps.ecr.outputs.registry }}/${PROJECT}-api:${GITHUB_SHA}"
+          docker build --platform linux/amd64 -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      # web.tf uploads dist/ to S3, so the build must happen before apply.
+      - name: Build frontend
+        working-directory: pipeline-radar
+        run: npm ci && npm run build
+
+      - name: Terraform init
+        working-directory: terraform
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${PROJECT}-tfstate-${ACCOUNT_ID}"
+
+      - name: Terraform plan
+        working-directory: terraform
+        run: terraform plan -input=false -var="image_tag=${GITHUB_SHA}" -out=tfplan
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: terraform apply -input=false -auto-approve tfplan
+
+      # S3 objects change without the distribution knowing; CDK's
+      # BucketDeployment did this implicitly.
+      - name: Invalidate CloudFront
+        working-directory: terraform
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$(terraform output -raw distribution_id)" \
+            --paths '/*'
+
+      - name: App URL
+        working-directory: terraform
+        run: echo "Deployed -> $(terraform output -raw app_url)" >> "$GITHUB_STEP_SUMMARY"

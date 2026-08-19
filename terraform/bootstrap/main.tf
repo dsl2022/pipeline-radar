@@ -1,0 +1,209 @@
+# One-time bootstrap, applied MANUALLY from a laptop with admin credentials.
+# Mirrors the old GithubOidcStack: after this exists, GitHub Actions never
+# needs stored AWS keys. Uses LOCAL state on purpose — it creates the very
+# bucket the main layer stores its state in, so it cannot use a remote backend.
+#
+#   cd terraform/bootstrap && terraform init && terraform apply
+
+terraform {
+  required_version = ">= 1.6"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.70"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.region
+}
+
+variable "region" {
+  type    = string
+  default = "us-east-1"
+}
+
+variable "github_repo" {
+  type        = string
+  description = "owner/repo allowed to assume the deploy role"
+  default     = "dsl2022/pipeline-radar"
+}
+
+variable "deploy_ref" {
+  type        = string
+  description = "Exact git ref allowed to deploy - fork PRs can never match this"
+  default     = "refs/heads/main"
+}
+
+variable "project" {
+  type    = string
+  default = "pipeline-radar"
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+# --- Terraform state backend -------------------------------------------------
+# CI runners are ephemeral, so state has to live remotely. Versioning is on so
+# a botched apply can be rolled back.
+
+resource "aws_s3_bucket" "state" {
+  bucket        = "${var.project}-tfstate-${data.aws_caller_identity.current.account_id}"
+  force_destroy = false
+}
+
+resource "aws_s3_bucket_versioning" "state" {
+  bucket = aws_s3_bucket.state.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
+  bucket = aws_s3_bucket.state.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "state" {
+  bucket                  = aws_s3_bucket.state.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_dynamodb_table" "state_lock" {
+  name         = "${var.project}-tfstate-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+
+# --- ECR ---------------------------------------------------------------------
+# Lives here rather than in the app layer so CI can push an image BEFORE the
+# app layer runs (the task definition needs an image tag that already exists).
+
+resource "aws_ecr_repository" "api" {
+  name                 = "${var.project}-api"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "api" {
+  repository = aws_ecr_repository.api.name
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "Keep the last 10 images"
+      selection = {
+        tagStatus   = "any"
+        countType   = "imageCountMoreThan"
+        countNumber = 10
+      }
+      action = { type = "expire" }
+    }]
+  })
+}
+
+# --- GitHub OIDC -------------------------------------------------------------
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    # Exact ref, not a wildcard: a fork PR can never assume this role.
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${var.github_repo}:ref:${var.deploy_ref}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "deploy" {
+  name               = "${var.project}-github-deploy"
+  description        = "Assumed by GitHub Actions (OIDC) to run terraform apply on push to main"
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+}
+
+# Terraform has no bootstrap-role indirection the way CDK does, so this role
+# needs real permissions. Scoped to the services the stack actually uses.
+data "aws_iam_policy_document" "deploy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:*", "ecs:*", "ecr:*", "elasticloadbalancing:*",
+      "cloudfront:*", "s3:*", "logs:*", "application-autoscaling:*",
+      "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem",
+    ]
+    resources = ["*"]
+  }
+
+  # PassRole is what lets ECS assume the task roles; keep it to this project.
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.project}-*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:GetRole", "iam:CreateRole", "iam:DeleteRole", "iam:TagRole",
+      "iam:AttachRolePolicy", "iam:DetachRolePolicy",
+      "iam:PutRolePolicy", "iam:DeleteRolePolicy",
+      "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
+      "iam:CreateServiceLinkedRole",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.project}-*"]
+  }
+}
+
+resource "aws_iam_role_policy" "deploy" {
+  role   = aws_iam_role.deploy.id
+  policy = data.aws_iam_policy_document.deploy.json
+}
+
+output "deploy_role_arn" {
+  description = "Set this as the AWS_DEPLOY_ROLE_ARN repo variable in GitHub"
+  value       = aws_iam_role.deploy.arn
+}
+
+output "state_bucket" {
+  value = aws_s3_bucket.state.id
+}
+
+output "ecr_repository_url" {
+  value = aws_ecr_repository.api.repository_url
+}

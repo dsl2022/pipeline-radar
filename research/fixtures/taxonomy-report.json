@@ -1,0 +1,638 @@
+{
+  "perDisease": {
+    "lung cancer": {
+      "trials": 2000,
+      "trialsWithDrugInterv": 1245,
+      "interventionsTotal": 4515,
+      "drugInterventions": 2971,
+      "uniqueDrugNames": 1490,
+      "categoryCounts": {
+        "combo": 227,
+        "dose": 94,
+        "researchCode": 538,
+        "parenthetical": 143,
+        "placeboArm": 53,
+        "routeForm": 124,
+        "trailingWhitespace": 0,
+        "multiSpace": 0,
+        "nonAscii": 37,
+        "allCaps": 66,
+        "veryLong": 44
+      },
+      "categoryExamples": {
+        "combo": [
+          "IBI351 combined with cetuximab β",
+          "Carboplatin + Pemetrexed + Pembrolizumab",
+          "Gemcitabine + Nab-paclitaxel",
+          "Osimertinib 80 mg/40 mg",
+          "EGFR-TKIs Combined with PD-1 Monoclonal Antibody",
+          "Chemotherapy + immunotherapy",
+          "RC148 plus Carboplatin and Paclitaxel/pemetrexed",
+          "Cyclophosphamide/Fludarabine"
+        ],
+        "dose": [
+          "MGC026 Dose Escalation",
+          "MGC026 Dose for Expansion",
+          "RSC-1255 Dose Escalation",
+          "RSC-1255 Dose Expansion",
+          "Pooled Mutant KRAS-Targeted Long Peptide Vaccine 0.3mg each; 1.8mg total peptides",
+          "Osimertinib 80 mg/40 mg",
+          "Placebo Gefitinib 250 mg",
+          "Pembrolizumab 200 mg"
+        ],
+        "researchCode": [
+          "MGC026 Dose Escalation",
+          "MGC026 Dose for Expansion",
+          "ASP3082",
+          "BEBT-109 Capsule",
+          "IBI351 combined with cetuximab β",
+          "PI3K-beta Inhibitor GSK2636771",
+          "VS-7375",
+          "C-CAR031"
+        ],
+        "parenthetical": [
+          "Pembrolizumab (KEYTRUDA®)",
+          "Platinum Doublet Chemotherapy (PDC)",
+          "Ceritinib (LDK378)",
+          "Ifinatamab Deruxtecan (I-DXd)",
+          "HER3-DXd (FL-DP)",
+          "HER3-DXd (CTM-1 Lyo-DP)",
+          "HER3-DXd (CTM-3 Lyo-DP)",
+          "Adebrelimab (PD-L1 inhibitor)"
+        ],
+        "placeboArm": [
+          "Placebo",
+          "Placebo Gefitinib 250 mg",
+          "Placebo ASK120067",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Pembrolizumab placebo (saline)",
+          "Pembrolizumab placebo (saline)"
+        ],
+        "routeForm": [
+          "BEBT-109 Capsule",
+          "Irinotecan hydrochloride liposome Injection",
+          "Pemetrexed Disodium for Injection",
+          "Cisplatin for injection",
+          "Carboplatin Injection",
+          "donor-derived NK cell infusion",
+          "Fosrolapitant and Palonosetron Hydrochloride for Injection combined with dexamethasone acetate",
+          "For injection, fosapirtan dimeglumine combined with palonosetron hydrochloride and dexamethasone acetate"
+        ],
+        "trailingWhitespace": [],
+        "multiSpace": [],
+        "nonAscii": [
+          "IBI351 combined with cetuximab β",
+          "Pembrolizumab (KEYTRUDA®)",
+          "CAR-T cells targeting GPC3, Mesothelin, Claudin18.2, GUCY2C, B7-H3, PSCA, PSMA, MUC1, TGFβ, HER2, Lewis-Y, AXL, or EGFR",
+          "Vinorelbine i.v. 25 mg/m²",
+          "US-Keytruda®",
+          "AST2303 Tablets(ABK3376 Tablets) ，25mg",
+          "AST2303 Tablets(ABK3376 Tablets) ，50mg",
+          "AST2303 Tablets(ABK3376 Tablets) ，75mg"
+        ],
+        "allCaps": [
+          "REGN2810",
+          "VERT-002",
+          "CLSP-1025",
+          "[18F]F-ARAG PET",
+          "LNCB74",
+          "REGN7075",
+          "JMKX001899",
+          "ABBV-706"
+        ],
+        "veryLong": [
+          "In vitro culture of autologous dendritic and natural killer cells for the treatment of patients with non-small cell lung cancer",
+          "Pooled Mutant KRAS-Targeted Long Peptide Vaccine 0.3mg each; 1.8mg total peptides",
+          "Fosrolapitant and Palonosetron Hydrochloride for Injection combined with dexamethasone acetate",
+          "For injection, fosapirtan dimeglumine combined with palonosetron hydrochloride and dexamethasone acetate",
+          "Aumolertinib combined with phased chemotherapy (pemetrexed and carboplatin)",
+          "CAR-T cells targeting GPC3, Mesothelin, Claudin18.2, GUCY2C, B7-H3, PSCA, PSMA, MUC1, TGFβ, HER2, Lewis-Y, AXL, or EGFR",
+          "nivolumab 4.5mg/kg+Paclitaxel (albumin-bound type) 260mg / m2+ Carboplatin AUC5",
+          "Patients with specific TIME subtype and ALK fusion mutations (confirmed via RNA-seq and OncoKB annotation) will receive tyrosine kinase inhibitors (TKIs, e.g., alectinib or crizotinib) as first-line"
+        ]
+      }
+    },
+    "multiple sclerosis": {
+      "trials": 613,
+      "trialsWithDrugInterv": 221,
+      "interventionsTotal": 988,
+      "drugInterventions": 429,
+      "uniqueDrugNames": 289,
+      "categoryCounts": {
+        "combo": 9,
+        "dose": 18,
+        "researchCode": 78,
+        "parenthetical": 45,
+        "placeboArm": 62,
+        "routeForm": 34,
+        "trailingWhitespace": 0,
+        "multiSpace": 0,
+        "nonAscii": 13,
+        "allCaps": 5,
+        "veryLong": 3
+      },
+      "categoryExamples": {
+        "combo": [
+          "Nebido® Testosterone Undecanoate 1000 Mg/4 mL Solution for Injection",
+          "DPA-714 PET/MRI",
+          "Ixazomib (NINLARO®) capsules / Matching placebo capsules",
+          "CD19/BCMA-targeted CAR-T cells",
+          "CD20/BCMA-directed CAR-T cells",
+          "IMU-838 (30 mg/day)",
+          "IMU-838 (45 mg/day)",
+          "IMU-838 (10 mg/day)"
+        ],
+        "dose": [
+          "Silodosin 8 mg",
+          "Cromolyn Sodium (34.2 mg BID)",
+          "Cromolyn Sodium (17.1 mg BID)",
+          "Riluzole (100 mg)",
+          "Dalfampridine 10 MG [Ampyra]",
+          "Metformin Hydrochloride 850 mg Oral Tablet",
+          "Exemestane 25 MG",
+          "Ofatumumab approved dose"
+        ],
+        "researchCode": [
+          "rapcabtagene autoleucel (YTB323)",
+          "LTX-002",
+          "NLY01",
+          "KYV-101 (Biological) - 0.33 ×10^8 cells",
+          "KYV-101 (Biological) - 1 ×10^8 cells",
+          "[F-18]SDM-8",
+          "F-18 3F4AP",
+          "AZD0120 - Regimen 1"
+        ],
+        "parenthetical": [
+          "Remibrutinib (blinded)",
+          "Remibrutinib (Open label)",
+          "rapcabtagene autoleucel (YTB323)",
+          "Disease-Modifying Therapies (DMTs)",
+          "Obecabtagene autoleucel (obe-cel)",
+          "KYV-101 (Biological) - 0.33 ×10^8 cells",
+          "KYV-101 (Biological) - 1 ×10^8 cells",
+          "Chemotherapy: cyclophosphamide (CYC)"
+        ],
+        "placeboArm": [
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo (PB)",
+          "Placebo",
+          "Placebo"
+        ],
+        "routeForm": [
+          "Ocrelizumab Injection [Ocrevus]",
+          "Ocrelizumab Injection [Ocrevus]",
+          "Fludarabine Phosphate for Injection",
+          "RO7121932 IV",
+          "RO7121932 SC",
+          "Placebo capsule",
+          "Placebo i.m. injection",
+          "Cladribine Subcutaneous Injection"
+        ],
+        "trailingWhitespace": [],
+        "multiSpace": [],
+        "nonAscii": [
+          "KYV-101 (Biological) - 0.33 ×10^8 cells",
+          "KYV-101 (Biological) - 1 ×10^8 cells",
+          "Avonex (IFNβ-1-a, Biogen Netherlands B.V)",
+          "Rebif (IFNβ-1-a, Merck Europe B.V.)",
+          "Extavia (IFNβ-1-b, Novartis Europharm Limited)",
+          "Betaseron (IFN-β-1-b, BAY86-5046, Bayer AG)",
+          "Plegridy (Peg IFNβ-1-a, Biogen Netherlands B.V)",
+          "Universal CD19 CAR-γδT Cell Injection"
+        ],
+        "allCaps": [
+          "HBI0101 CART",
+          "[18F] FZTA",
+          "KITE-363",
+          "COYA 302",
+          "MB-CART2019.1"
+        ],
+        "veryLong": [
+          "Platform therapies (Dimethyl Fumarate, Teriflunomide, Glatiramer Acetate, Beta-interferons)",
+          "Nebido® Testosterone Undecanoate 1000 Mg/4 mL Solution for Injection",
+          "Autologous Human Polyclonal Regulatory T Cells Injection (NP001 Cell Injection)"
+        ]
+      }
+    },
+    "duchenne muscular dystrophy": {
+      "trials": 97,
+      "trialsWithDrugInterv": 40,
+      "interventionsTotal": 122,
+      "drugInterventions": 68,
+      "uniqueDrugNames": 47,
+      "categoryCounts": {
+        "combo": 5,
+        "dose": 12,
+        "researchCode": 23,
+        "parenthetical": 5,
+        "placeboArm": 15,
+        "routeForm": 3,
+        "trailingWhitespace": 0,
+        "multiSpace": 0,
+        "nonAscii": 0,
+        "allCaps": 8,
+        "veryLong": 0
+      },
+      "categoryExamples": {
+        "combo": [
+          "NS-050/NCNP-03",
+          "NS-089/NCNP-02",
+          "vamorolone 40 mg/mL oral suspension",
+          "NS-089/NCNP-02",
+          "NS-089/NCNP-02"
+        ],
+        "dose": [
+          "Sevasemten Dose 1",
+          "Sevasemten Dose 2",
+          "Sevasemten Dose 3",
+          "Sevasemten 10 mg",
+          "Sevasemten 5 mg",
+          "Sevasemten 12.5 mg",
+          "vamorolone 40 mg/mL oral suspension",
+          "Sevasemten Dose 1"
+        ],
+        "researchCode": [
+          "NS-050/NCNP-03",
+          "ENTR-601-45",
+          "ENTR-601-45 - matching placebo",
+          "SGT-003",
+          "WVE-N531",
+          "AOC 1044",
+          "GRT6019",
+          "NS-089/NCNP-02"
+        ],
+        "parenthetical": [
+          "Human Umbilical Cord Mesenchymal Stem Cells (UC-MSC)",
+          "PBGENE-DMD (IV)",
+          "Deramiocel (CAP-1002)",
+          "Deramiocel (CAP-1002)",
+          "Zeleciment Rostudirsen (DYNE-251)"
+        ],
+        "placeboArm": [
+          "Placebo",
+          "ENTR-601-45 - matching placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo [Ambulatory Cohort] only"
+        ],
+        "routeForm": [
+          "PBGENE-DMD (IV)",
+          "vamorolone 40 mg/mL oral suspension",
+          "JWK007 Single intravenous infusion administration"
+        ],
+        "trailingWhitespace": [],
+        "multiSpace": [],
+        "nonAscii": [],
+        "allCaps": [
+          "NS-050/NCNP-03",
+          "ENTR-601-45",
+          "NS-089/NCNP-02",
+          "ENTR-601-44",
+          "PBGENE-DMD (IV)",
+          "DYNE-251",
+          "NS-089/NCNP-02",
+          "NS-089/NCNP-02"
+        ],
+        "veryLong": []
+      }
+    },
+    "psoriasis": {
+      "trials": 314,
+      "trialsWithDrugInterv": 195,
+      "interventionsTotal": 547,
+      "drugInterventions": 385,
+      "uniqueDrugNames": 213,
+      "categoryCounts": {
+        "combo": 1,
+        "dose": 21,
+        "researchCode": 66,
+        "parenthetical": 8,
+        "placeboArm": 68,
+        "routeForm": 46,
+        "trailingWhitespace": 0,
+        "multiSpace": 0,
+        "nonAscii": 13,
+        "allCaps": 5,
+        "veryLong": 3
+      },
+      "categoryExamples": {
+        "combo": [
+          "CAL/BDP Gel"
+        ],
+        "dose": [
+          "Tildrakizumab 100 mg",
+          "Upadacitinib 15 MG [Rinvoq]",
+          "low dose Jiuweihuaban Pill",
+          "high dose Jiuweihuaban Pill",
+          "CS32582 capsule（low dose） or matched placebo",
+          "CS32582 capsule（high dose） or matched placebo",
+          "CS32582 capsule（low dose）",
+          "CS32582 capsule（medium dose）"
+        ],
+        "researchCode": [
+          "S-4321",
+          "HS-20118",
+          "RSS0393 ointment；Placebo",
+          "IDP-122 Lotion",
+          "SHR-1139 Injection",
+          "SHR-1139 Injection Placebo",
+          "D-2570",
+          "Drug:WD-890"
+        ],
+        "parenthetical": [
+          "Semaglutide (Rybelsus®)",
+          "Infliximab-dyyb Biosimilar (Remsima)",
+          "TILD sub-cutaneous (SC) injection",
+          "Total coumarin (TC) cream",
+          "Drug group：vunakizumab (IL-17A inhibitor)",
+          "Guselkumab (Tremfya®)",
+          "Dengue 1,2,3,4 (attenuated) vaccine",
+          "Methotrexate (Metoject® prefilled pen)"
+        ],
+        "placeboArm": [
+          "Placebo",
+          "Placebo",
+          "RSS0393 ointment；Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo",
+          "Placebo-vehicle",
+          "Placebo"
+        ],
+        "routeForm": [
+          "RSS0393 ointment；Placebo",
+          "SHR-1139 Injection",
+          "SHR-1139 Injection Placebo",
+          "SHR-1139 Injection",
+          "SHR-1139 Injection",
+          "SHR-1139 Injection",
+          "Delgocitinib cream",
+          "Vehicle cream"
+        ],
+        "trailingWhitespace": [],
+        "multiSpace": [],
+        "nonAscii": [
+          "Semaglutide (Rybelsus®)",
+          "RSS0393 ointment；Placebo",
+          "Stelara®",
+          "CS32582 capsule（low dose） or matched placebo",
+          "CS32582 capsule（high dose） or matched placebo",
+          "CS32582 capsule（low dose）",
+          "CS32582 capsule（medium dose）",
+          "CS32582 capsule（high dose）"
+        ],
+        "allCaps": [
+          "ORKA-002",
+          "SKYRIZI",
+          "SKYRIZI",
+          "ORKA-001",
+          "ORKA-001"
+        ],
+        "veryLong": [
+          "switch of anti TNF for ustekinumab for paradoxical psoriasis.",
+          "JAKi disease activity guided continuation of same dose strategy",
+          "adalimumab, secukinumab, ixekizumab, guselkumab, Jak inhibitors, methotrexate"
+        ]
+      }
+    }
+  },
+  "typeCounts": {
+    "RADIATION": 231,
+    "DRUG": 3393,
+    "BIOLOGICAL": 460,
+    "DIAGNOSTIC_TEST": 207,
+    "DEVICE": 214,
+    "COMBINATION_PRODUCT": 35,
+    "GENETIC": 36,
+    "DIETARY_SUPPLEMENT": 42,
+    "BEHAVIORAL": 263,
+    "PROCEDURE": 473,
+    "OTHER": 818
+  },
+  "phaseValues": {
+    "NA": 634,
+    "PHASE1": 602,
+    "PHASE4": 77,
+    "PHASE2": 863,
+    "PHASE3": 338,
+    "EARLY_PHASE1": 36
+  },
+  "statusValues": {
+    "ACTIVE_NOT_RECRUITING": 939,
+    "RECRUITING": 2085
+  },
+  "nullStats": {
+    "noInterventions": 326,
+    "noPhase": 768,
+    "emptyPhaseArr": 0,
+    "naPhase": 634,
+    "noEnrollment": 2,
+    "noSponsor": 0,
+    "trials": 3024
+  },
+  "otherNamesStats": {
+    "withOther": 1386,
+    "withoutOther": 2467,
+    "totalOtherNames": 3902,
+    "maxOtherNames": 79,
+    "examples": [
+      {
+        "name": "Consolidation durvalumab",
+        "otherNames": [
+          "Chemoradiotherapy",
+          "Surgery"
+        ]
+      },
+      {
+        "name": "Loratinib",
+        "otherNames": [
+          "LORBRENA"
+        ]
+      },
+      {
+        "name": "BEBT-109 Capsule",
+        "otherNames": [
+          "KCBT-1083"
+        ]
+      },
+      {
+        "name": "PF-07934040",
+        "otherNames": [
+          "PF-4040"
+        ]
+      },
+      {
+        "name": "Sacituzumab tirumotecan",
+        "otherNames": [
+          "SKB264",
+          "MK-2870"
+        ]
+      },
+      {
+        "name": "Pembrolizumab",
+        "otherNames": [
+          "MK-3475",
+          "KEYTRUDA®",
+          "SCH 900475"
+        ]
+      },
+      {
+        "name": "Nivolumab",
+        "otherNames": [
+          "BMS-936558",
+          "MDX-1106",
+          "NIVO",
+          "ONO-4538",
+          "Opdivo"
+        ]
+      },
+      {
+        "name": "Temozolomide",
+        "otherNames": [
+          "CCRG-81045",
+          "Imidazo[5,1-d]-1,2,3,5-tetrazine-8-carboxamide, 3, 4-dihydro-3-methyl-4-oxo-",
+          "M & B 39831",
+          "M and B 39831",
+          "Methazolastone",
+          "RP-46161",
+          "SCH 52365",
+          "Temcad",
+          "Temodal",
+          "Temodar",
+          "Temomedac"
+        ]
+      },
+      {
+        "name": "Adavosertib",
+        "otherNames": [
+          "AZD 1775",
+          "AZD-1775",
+          "AZD1775",
+          "MK 1775",
+          "MK-1775",
+          "MK1775"
+        ]
+      },
+      {
+        "name": "Afatinib",
+        "otherNames": [
+          "BIBW 2992",
+          "BIBW-2992",
+          "BIBW2992"
+        ]
+      },
+      {
+        "name": "Afatinib Dimaleate",
+        "otherNames": [
+          "(2E)-N-(4-((3-Chloro-4-fluorophenyl)amino)-7-(((3S)-tetrahydrofuran-3-yl)oxy)quinazolin- 6-yl)-4-(dimethylamino)but-2-enamide bis(hydrogen (2Z)-but-2-enedioate)",
+          "BIBW 2992MA2",
+          "BIBW2992 MA2",
+          "Gilotrif"
+        ]
+      },
+      {
+        "name": "Binimetinib",
+        "otherNames": [
+          "ARRY 162",
+          "ARRY 438162",
+          "ARRY-162",
+          "ARRY-438162",
+          "ARRY162",
+          "ARRY438162",
+          "MEK 162",
+          "MEK-162",
+          "MEK162",
+          "Mektovi"
+        ]
+      },
+      {
+        "name": "Capivasertib",
+        "otherNames": [
+          "AZD 5363",
+          "AZD-5363",
+          "AZD5363",
+          "Truqap"
+        ]
+      },
+      {
+        "name": "Copanlisib",
+        "otherNames": [
+          "BAY 80 6946",
+          "BAY 80-6946",
+          "BAY 806946",
+          "BAY-80-6946",
+          "BAY806946",
+          "PI3K Inhibitor BAY 80-6946"
+        ]
+      },
+      {
+        "name": "Copanlisib Hydrochloride",
+        "otherNames": [
+          "5-Pyrimidinecarboxamide, 2-Amino-N-(2,3-dihydro-7-methoxy-8-(3-(4-morpholinyl)propoxy)imidazo(1,2-C)quinazolin-5-yl)-, Hydrochloride (1:2)",
+          "Aliqopa",
+          "BAY 80-6946 Dihydrochloride",
+          "BAY-80-6946 Dihydrochloride",
+          "Copanlisib Dihydrochloride"
+        ]
+      }
+    ],
+    "avgWhenPresent": "2.82"
+  },
+  "uniqueRawNames": 2000,
+  "uniqueAfterCaseTrimFold": 1905,
+  "caseCollisionGroups": 89,
+  "caseCollisionExamples": [
+    [
+      "Bevacizumab",
+      "bevacizumab"
+    ],
+    [
+      "Tislelizumab",
+      "tislelizumab"
+    ],
+    [
+      "Immunotherapy",
+      "immunotherapy"
+    ],
+    [
+      "carboplatin",
+      "Carboplatin",
+      "CARBOPLATIN"
+    ],
+    [
+      "paclitaxel",
+      "Paclitaxel",
+      "PACLITAXEL"
+    ],
+    [
+      "durvalumab",
+      "Durvalumab"
+    ],
+    [
+      "cisplatin",
+      "Cisplatin"
+    ],
+    [
+      "gemcitabine",
+      "Gemcitabine"
+    ],
+    [
+      "pemetrexed",
+      "Pemetrexed",
+      "PEMETREXED"
+    ],
+    [
+      "Sacituzumab tirumotecan",
+      "Sacituzumab Tirumotecan"
+    ]
+  ]
+}

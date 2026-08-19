@@ -1,0 +1,279 @@
+{
+  "info": {
+    "name": "Pipeline Radar — API Explorer",
+    "description": "All four public APIs from the Blue Matter Pipeline Radar brief. No auth/keys needed.\n\nCollection variables: `disease` (default: lung cancer), `drug` (generic name, default: pembrolizumab), `brand` (default: keytruda), `researchCode` (default: MK-3475).\n\nRate limits to respect:\n- openFDA: 240 req/min, 1,000/day per IP\n- PubMed: ~3 req/sec\n- ClinicalTrials.gov & RxNorm: no published hard limit, be reasonable",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "disease", "value": "lung cancer" },
+    { "key": "drug", "value": "pembrolizumab" },
+    { "key": "brand", "value": "keytruda" },
+    { "key": "researchCode", "value": "MK-3475" },
+    { "key": "pageToken", "value": "", "description": "Paste nextPageToken from a previous ClinicalTrials response" }
+  ],
+  "item": [
+    {
+      "name": "ClinicalTrials.gov v2",
+      "item": [
+        {
+          "name": "Basic search by condition",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://clinicaltrials.gov/api/v2/studies?query.cond={{disease}}&pageSize=10&countTotal=true",
+              "protocol": "https",
+              "host": ["clinicaltrials", "gov"],
+              "path": ["api", "v2", "studies"],
+              "query": [
+                { "key": "query.cond", "value": "{{disease}}" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "countTotal", "value": "true" }
+              ]
+            },
+            "description": "Simplest query — full study payloads. Use this once to see the complete JSON shape, then switch to the slimmed request."
+          }
+        },
+        {
+          "name": "Search — recruiting only, slimmed fields (build against this)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://clinicaltrials.gov/api/v2/studies?query.cond={{disease}}&filter.overallStatus=RECRUITING&pageSize=50&countTotal=true&fields=NCTId,BriefTitle,OverallStatus,Phase,EnrollmentCount,LeadSponsorName,InterventionType,InterventionName,InterventionOtherName",
+              "protocol": "https",
+              "host": ["clinicaltrials", "gov"],
+              "path": ["api", "v2", "studies"],
+              "query": [
+                { "key": "query.cond", "value": "{{disease}}" },
+                { "key": "filter.overallStatus", "value": "RECRUITING", "description": "Exact, case-sensitive enum. Comma-separate for multiple: RECRUITING,ACTIVE_NOT_RECRUITING" },
+                { "key": "pageSize", "value": "50", "description": "max 1000" },
+                { "key": "countTotal", "value": "true" },
+                { "key": "fields", "value": "NCTId,BriefTitle,OverallStatus,Phase,EnrollmentCount,LeadSponsorName,InterventionType,InterventionName,InterventionOtherName", "description": "Slims payload to exactly what the app needs. InterventionOtherName is the synonym goldmine for milestone 3." }
+              ]
+            },
+            "description": "The request the app should actually use. Note `phases` comes back as an ARRAY (e.g. [\"PHASE2\",\"PHASE3\"]) and may be empty or [\"NA\"]."
+          }
+        },
+        {
+          "name": "Pagination — next page via pageToken",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://clinicaltrials.gov/api/v2/studies?query.cond={{disease}}&filter.overallStatus=RECRUITING&pageSize=50&pageToken={{pageToken}}",
+              "protocol": "https",
+              "host": ["clinicaltrials", "gov"],
+              "path": ["api", "v2", "studies"],
+              "query": [
+                { "key": "query.cond", "value": "{{disease}}" },
+                { "key": "filter.overallStatus", "value": "RECRUITING" },
+                { "key": "pageSize", "value": "50" },
+                { "key": "pageToken", "value": "{{pageToken}}", "description": "Copy nextPageToken from the previous response into the collection variable" }
+              ]
+            },
+            "description": "Cursor pagination: response.nextPageToken → request pageToken. Run the previous request first, copy its nextPageToken into the `pageToken` collection variable."
+          }
+        },
+        {
+          "name": "Filter by phase (advanced filter)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://clinicaltrials.gov/api/v2/studies?query.cond={{disease}}&filter.advanced=AREA[Phase]PHASE3&pageSize=10&countTotal=true",
+              "protocol": "https",
+              "host": ["clinicaltrials", "gov"],
+              "path": ["api", "v2", "studies"],
+              "query": [
+                { "key": "query.cond", "value": "{{disease}}" },
+                { "key": "filter.advanced", "value": "AREA[Phase]PHASE3" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "countTotal", "value": "true" }
+              ]
+            },
+            "description": "Server-side phase filtering uses the Essie expression syntax via filter.advanced. Client-side filtering over fetched results is usually simpler for the demo."
+          }
+        },
+        {
+          "name": "Single study by NCT ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://clinicaltrials.gov/api/v2/studies/NCT02775435",
+              "protocol": "https",
+              "host": ["clinicaltrials", "gov"],
+              "path": ["api", "v2", "studies", "NCT02775435"]
+            },
+            "description": "Full detail for one trial (this one is a pembrolizumab lung-cancer trial — good for inspecting the complete schema)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "openFDA",
+      "item": [
+        {
+          "name": "Approvals (drugsfda) by generic name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.fda.gov/drug/drugsfda.json?search=openfda.generic_name:\"{{drug}}\"&limit=5",
+              "protocol": "https",
+              "host": ["api", "fda", "gov"],
+              "path": ["drug", "drugsfda.json"],
+              "query": [
+                { "key": "search", "value": "openfda.generic_name:\"{{drug}}\"" },
+                { "key": "limit", "value": "5", "description": "max 100" }
+              ]
+            },
+            "description": "Milestone 4: presence of results = Approved badge. A 404 with an error body means NO MATCH (investigational), not a broken request — handle it as a valid outcome."
+          }
+        },
+        {
+          "name": "Approvals by brand name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.fda.gov/drug/drugsfda.json?search=openfda.brand_name:\"{{brand}}\"&limit=5",
+              "protocol": "https",
+              "host": ["api", "fda", "gov"],
+              "path": ["drug", "drugsfda.json"],
+              "query": [
+                { "key": "search", "value": "openfda.brand_name:\"{{brand}}\"" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Fallback lookup when the trial data only gives you a brand name."
+          }
+        },
+        {
+          "name": "Drug label",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.fda.gov/drug/label.json?search=openfda.generic_name:\"{{drug}}\"&limit=1",
+              "protocol": "https",
+              "host": ["api", "fda", "gov"],
+              "path": ["drug", "label.json"],
+              "query": [
+                { "key": "search", "value": "openfda.generic_name:\"{{drug}}\"" },
+                { "key": "limit", "value": "1" }
+              ]
+            },
+            "description": "Huge payload — indications, warnings, etc. Useful for 'surface something useful' on approved drugs."
+          }
+        },
+        {
+          "name": "Side-effect counts (adverse events)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.fda.gov/drug/event.json?search=patient.drug.openfda.generic_name:\"{{drug}}\"&count=patient.reaction.reactionmeddrapt.exact",
+              "protocol": "https",
+              "host": ["api", "fda", "gov"],
+              "path": ["drug", "event.json"],
+              "query": [
+                { "key": "search", "value": "patient.drug.openfda.generic_name:\"{{drug}}\"" },
+                { "key": "count", "value": "patient.reaction.reactionmeddrapt.exact" }
+              ]
+            },
+            "description": "Returns top reported reactions with counts — a ready-made bar chart for approved drugs."
+          }
+        }
+      ]
+    },
+    {
+      "name": "RxNorm",
+      "item": [
+        {
+          "name": "Exact match — generic name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rxnav.nlm.nih.gov/REST/rxcui.json?name={{drug}}",
+              "protocol": "https",
+              "host": ["rxnav", "nlm", "nih", "gov"],
+              "path": ["REST", "rxcui.json"],
+              "query": [
+                { "key": "name", "value": "{{drug}}" }
+              ]
+            },
+            "description": "Returns idGroup.rxnormId (array of RxCUI strings). Empty idGroup = miss — expected for new experimental compounds."
+          }
+        },
+        {
+          "name": "Exact match — research code (expect a miss or hit?)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rxnav.nlm.nih.gov/REST/rxcui.json?name={{researchCode}}&allsrc=1",
+              "protocol": "https",
+              "host": ["rxnav", "nlm", "nih", "gov"],
+              "path": ["REST", "rxcui.json"],
+              "query": [
+                { "key": "name", "value": "{{researchCode}}" },
+                { "key": "allsrc", "value": "1", "description": "Search all source vocabularies, not just active RxNorm — improves research-code hit rate" }
+              ]
+            },
+            "description": "Tests whether MK-3475 resolves to the same RxCUI as pembrolizumab. This is the milestone-3 linchpin — verify it before relying on it."
+          }
+        },
+        {
+          "name": "Fuzzy match — brand name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term={{brand}}&maxEntries=3",
+              "protocol": "https",
+              "host": ["rxnav", "nlm", "nih", "gov"],
+              "path": ["REST", "approximateTerm.json"],
+              "query": [
+                { "key": "term", "value": "{{brand}}" },
+                { "key": "maxEntries", "value": "3" }
+              ]
+            },
+            "description": "Fuzzy fallback for messy free-text names ('Pembrolizumab 200mg IV'). Check candidate.score before trusting a match."
+          }
+        },
+        {
+          "name": "Fuzzy match — dose-embedded messy name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=Pembrolizumab 200mg IV&maxEntries=3",
+              "protocol": "https",
+              "host": ["rxnav", "nlm", "nih", "gov"],
+              "path": ["REST", "approximateTerm.json"],
+              "query": [
+                { "key": "term", "value": "Pembrolizumab 200mg IV" },
+                { "key": "maxEntries", "value": "3" }
+              ]
+            },
+            "description": "Realistic messy input straight from a trial's intervention name — see how well fuzzy matching copes before deciding your triage order."
+          }
+        }
+      ]
+    },
+    {
+      "name": "PubMed (stretch)",
+      "item": [
+        {
+          "name": "Publication search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={{drug}}&retmode=json&retmax=5",
+              "protocol": "https",
+              "host": ["eutils", "ncbi", "nlm", "nih", "gov"],
+              "path": ["entrez", "eutils", "esearch.fcgi"],
+              "query": [
+                { "key": "db", "value": "pubmed" },
+                { "key": "term", "value": "{{drug}}" },
+                { "key": "retmode", "value": "json" },
+                { "key": "retmax", "value": "5" }
+              ]
+            },
+            "description": "Returns esearchresult.count (publication count — a cheap 'research momentum' signal) and idlist (PMIDs). Stay under ~3 req/sec."
+          }
+        }
+      ]
+    }
+  ]
+}

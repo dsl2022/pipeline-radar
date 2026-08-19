@@ -1,0 +1,656 @@
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  margin-bottom: 0.25rem;
+}
+
+.tagline {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.search input {
+  flex: 1;
+  max-width: 420px;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.search button {
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #1a56db;
+  color: #fff;
+  cursor: pointer;
+}
+
+.search button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.info {
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: #b91c1c;
+  background: #fef2f2;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+th {
+  background: #f9fafb;
+  position: sticky;
+  top: 0;
+}
+
+td.title {
+  max-width: 380px;
+}
+
+td.num {
+  text-align: right;
+}
+
+.status {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #eee;
+}
+
+.status-recruiting {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-active_not_recruiting {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.status-not_yet_recruiting {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-enrolling_by_invitation {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chip-group-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.chip {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: #1a56db;
+}
+
+.chip.on {
+  background: #1a56db;
+  border-color: #1a56db;
+  color: #fff;
+}
+
+.chip-count {
+  opacity: 0.65;
+  font-size: 0.78rem;
+}
+
+.clear-filters {
+  border: none;
+  background: none;
+  color: #1a56db;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Summary charts */
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.chart h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.chart-empty {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 40%) 1fr 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  background: #e5e7eb;
+  border-radius: 4px;
+  height: 0.9rem;
+  overflow: hidden;
+}
+
+.bar {
+  display: block;
+  height: 100%;
+  background: #1a56db;
+  border-radius: 4px;
+}
+
+.bar-count {
+  text-align: right;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sortable headers */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th.sortable:hover {
+  color: #1a56db;
+}
+
+.sort-ind {
+  font-size: 0.7rem;
+}
+
+/* View toggle (Trials | Drugs) */
+.view-toggle {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  padding: 0.45rem 1.1rem;
+  font-size: 0.9rem;
+  border: none;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.view-toggle button + button {
+  border-left: 1px solid #d1d5db;
+}
+
+.view-toggle button.on {
+  background: #1a56db;
+  color: #fff;
+}
+
+/* Drug landscape table */
+.drug-name {
+  font-weight: 600;
+}
+
+.phase-badge {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.phase-badge.phase-na {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+td.aliases {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b7280;
+}
+
+.more {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.rx-pending {
+  color: #9ca3af;
+}
+
+.rx-miss {
+  font-size: 0.8rem;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.drug-note {
+  font-size: 0.85rem;
+}
+
+/* Load more */
+.load-more {
+  display: block;
+  margin: 1rem auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.95rem;
+  border: 1px solid #1a56db;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a56db;
+  cursor: pointer;
+}
+
+.load-more:hover {
+  background: #eff6ff;
+}
+
+.load-more:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.page-cap {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Milestone 4: FDA badge column + expandable detail row */
+.fda-chip {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.fda-approved {
+  background: #def7ec;
+  color: #03543f;
+}
+
+.fda-inv {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+tr.drug-row {
+  cursor: pointer;
+}
+
+tr.drug-row:hover td {
+  background: #f9fafb;
+}
+
+.chevron {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+tr.expansion-row td {
+  background: #f9fafb;
+  padding: 0.75rem 1rem 0.9rem 1.9rem;
+  font-size: 0.88rem;
+}
+
+.fda-detail {
+  margin: 0 0 0.35rem;
+}
+
+.fda-detail.muted,
+.nct-links {
+  color: #6b7280;
+}
+
+.nct-links {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+}
+
+.ae-toggle {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.ae-toggle:hover {
+  border-color: #1a56db;
+  color: #1a56db;
+}
+
+.ae-panel {
+  margin-top: 0.6rem;
+  max-width: 480px;
+}
+
+.ae-note {
+  margin: 0.5rem 0 0;
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.ae-caveat {
+  margin: 0.4rem 0 0;
+  color: #92400e;
+  font-size: 0.78rem;
+}
+
+/* Milestone 5: export bar + watchlist diff panel */
+.export-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.export-bar button {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.export-bar button:hover {
+  border-color: #1a56db;
+  color: #1a56db;
+}
+
+.export-bar button.save-watchlist {
+  border-color: #1a56db;
+  color: #1a56db;
+}
+
+.export-pending {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.export-error {
+  font-size: 0.78rem;
+  color: #b91c1c;
+}
+
+.diff-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #1a56db;
+  border-radius: 10px;
+  padding: 0.7rem 1rem 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.86rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.diff-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.diff-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a56db;
+}
+
+.diff-when {
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+.diff-caveat {
+  margin: 0.25rem 0;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.diff-none {
+  margin: 0.2rem 0 0.45rem;
+  color: #374151;
+}
+
+.diff-sections {
+  display: flex;
+  flex-direction: column;
+}
+
+.diff-section {
+  border-top: 1px solid #f3f4f6;
+}
+
+.diff-section:first-child {
+  border-top: none;
+}
+
+.diff-section summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.1rem;
+  cursor: pointer;
+  list-style: none;
+  color: #1f2937;
+  user-select: none;
+}
+
+.diff-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.diff-section summary:hover {
+  background: #f9fafb;
+}
+
+.diff-section .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.tone-add .dot { background: #10b981; }
+.tone-up .dot { background: #3b82f6; }
+.tone-fda .dot { background: #047857; }
+.tone-trials .dot { background: #6366f1; }
+.tone-drop .dot { background: #ef4444; }
+.tone-muted .dot { background: #d1d5db; }
+
+.diff-section .count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.4ch;
+  text-align: right;
+}
+
+.diff-section .label {
+  color: #374151;
+}
+
+.tone-muted summary .count,
+.tone-muted summary .label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.diff-section .chev {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 0.7rem;
+  transition: transform 0.12s ease;
+}
+
+.diff-section[open] .chev {
+  transform: rotate(90deg);
+}
+
+/* Expanded lists scroll past ~7 rows so a big delta never takes the page over. */
+.diff-section ul {
+  margin: 0 0 0.5rem;
+  padding: 0 0 0 1.15rem;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.diff-section li {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.22rem 0;
+  border-top: 1px dashed #f3f4f6;
+}
+
+.diff-section li:first-child {
+  border-top: none;
+}
+
+.diff-section li strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.li-detail {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.nct-list a {
+  font-size: 0.78rem;
+}
+
+/* Milestone 5 (cut-line extra): browser print → PDF is the client handoff.
+   Hide the app chrome; the info line + drug table are the deliverable. */
+@media print {
+  .search,
+  .filters,
+  .view-toggle,
+  .load-more,
+  .export-bar,
+  .ae-toggle,
+  .diff-panel {
+    display: none !important;
+  }
+
+  th {
+    position: static; /* sticky headers repeat oddly across printed pages */
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+}

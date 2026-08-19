@@ -1,0 +1,338 @@
+{
+  "v1_bridgeRecords": 40,
+  "v1_topBridges": [
+    {
+      "name": "Best Available Therapy (BAT)",
+      "bridgesTo": [
+        "natalizumab",
+        "alemtuzumab",
+        "ocrelizumab",
+        "rituximab",
+        "cladribine",
+        "ofatumumab",
+        "ublituximab"
+      ],
+      "nAliases": 7
+    },
+    {
+      "name": "Chemotherapy",
+      "bridgesTo": [
+        "paclitaxel",
+        "carboplatin",
+        "oxaliplatin",
+        "fluorouracil",
+        "capecitabine",
+        "immunotherapy"
+      ],
+      "nAliases": 12
+    },
+    {
+      "name": "Escalation Therapies Group",
+      "bridgesTo": [
+        "betaseron",
+        "extavia",
+        "plegridy",
+        "rebif",
+        "avonex",
+        "mavenclad"
+      ],
+      "nAliases": 16
+    },
+    {
+      "name": "Platinum-based chemotherapy",
+      "bridgesTo": [
+        "paclitaxel",
+        "docetaxel",
+        "pemetrexed",
+        "carboplatin",
+        "cisplatin"
+      ],
+      "nAliases": 7
+    },
+    {
+      "name": "Platinum Doublet",
+      "bridgesTo": [
+        "cisplatin",
+        "pemetrexed",
+        "docetaxel",
+        "gemcitabine",
+        "platinumbaseddoublet"
+      ],
+      "nAliases": 11
+    },
+    {
+      "name": "Camrelizumab",
+      "bridgesTo": [
+        "cisplatin",
+        "carboplatin",
+        "pemetrexed",
+        "apatinib",
+        "platinumbasedchemotherapy"
+      ],
+      "nAliases": 8
+    },
+    {
+      "name": "ERAS-0015 in combination",
+      "bridgesTo": [
+        "pembrolizumab",
+        "keytruda",
+        "panitumumab",
+        "gemcitabine",
+        "nabpaclitaxel"
+      ],
+      "nAliases": 8
+    },
+    {
+      "name": "Intravenous steroid",
+      "bridgesTo": [
+        "azathioprine",
+        "mycophenolatemofetil",
+        "rituximab",
+        "natalizumab",
+        "cyclophosphamide"
+      ],
+      "nAliases": 8
+    },
+    {
+      "name": "Induction Carboplatin",
+      "bridgesTo": [
+        "carboplatin",
+        "etoposide",
+        "pembrolizumab",
+        "sacituzumabgovitecan"
+      ],
+      "nAliases": 4
+    },
+    {
+      "name": "Pemetrexed, Cisplatin, Bevacizumab Plus Pembrolizumab",
+      "bridgesTo": [
+        "pemetrexed",
+        "bevacizumab",
+        "pembrolizumab",
+        "atezolizumab"
+      ],
+      "nAliases": 4
+    }
+  ],
+  "v3": {
+    "uniqueRawNames": 2000,
+    "clusters": 1424,
+    "mergedGroups": 225,
+    "ambiguousAliasesDropped": 18,
+    "countGuardBlocked": 66,
+    "categoryTermsExcluded": 219,
+    "comboRecordsSplit": 262,
+    "topClusters": [
+      {
+        "key": "carboplatin",
+        "display": "carboplatin",
+        "size": 44,
+        "trialMentions": 176,
+        "rawNames": [
+          "carboplatin",
+          "Carboplatin + Pemetrexed + Pembrolizumab",
+          "Carboplatin",
+          "Carboplatin Injection",
+          "RC148 plus Carboplatin and Paclitaxel/pemetrexed",
+          "Carboplatin (or cisplatin if carboplatin is not tolerated)"
+        ]
+      },
+      {
+        "key": "pembrolizumab",
+        "display": "pembrolizumab",
+        "size": 37,
+        "trialMentions": 161,
+        "rawNames": [
+          "Pembrolizumab",
+          "Carboplatin + Pemetrexed + Pembrolizumab",
+          "pembrolizumab",
+          "Pembrolizumab (KEYTRUDA®)",
+          "Pembrolizumab (+) Berahyaluronidase alfa",
+          "Pembrolizumab 200 mg"
+        ]
+      },
+      {
+        "key": "pemetrexed",
+        "display": "pemetrexed",
+        "size": 33,
+        "trialMentions": 125,
+        "rawNames": [
+          "pemetrexed",
+          "Carboplatin + Pemetrexed + Pembrolizumab",
+          "Pemetrexed",
+          "RC148 plus Carboplatin and Paclitaxel/pemetrexed",
+          "Pemetrexed Disodium",
+          "Pemetrexed (Alimta)"
+        ]
+      },
+      {
+        "key": "cisplatin",
+        "display": "cisplatin",
+        "size": 21,
+        "trialMentions": 84,
+        "rawNames": [
+          "cisplatin",
+          "Cisplatin",
+          "Carboplatin/Cisplatin",
+          "Pemetrexed/Cisplatin",
+          "Gemcitabine + Cisplatin",
+          "Etoposide + cisplatin/carboplatin"
+        ]
+      },
+      {
+        "key": "paclitaxel",
+        "display": "paclitaxel",
+        "size": 17,
+        "trialMentions": 63,
+        "rawNames": [
+          "paclitaxel",
+          "Paclitaxel",
+          "RC148 plus Carboplatin and Paclitaxel/pemetrexed",
+          "nivolumab 4.5mg/kg+Paclitaxel (albumin-bound type) 260mg / m2+ Carboplatin AUC5",
+          "Paclitaxel Oral Solution",
+          "Paclitaxel + carboplatin"
+        ]
+      },
+      {
+        "key": "durvalumab",
+        "display": "durvalumab",
+        "size": 17,
+        "trialMentions": 69,
+        "rawNames": [
+          "durvalumab",
+          "Durvalumab",
+          "N-803 + Durvalumab",
+          "N-803 + Durvalumab + PD-L1 t-haNK",
+          "Durvalumab +Tremelimumab",
+          "IPH5201 + durvalumab + standard chemotherapy"
+        ]
+      },
+      {
+        "key": "etoposide",
+        "display": "etoposide",
+        "size": 15,
+        "trialMentions": 48,
+        "rawNames": [
+          "Etoposide",
+          "etoposide",
+          "Etoposide 100 mg/m^2",
+          "Pembrolizumab, Plinabulin plus Etoposide and Platinum",
+          "Induction Durvalumab +etoposide/platinum +Radiochemotherapy+ durvalumab maintenance",
+          "4 cycles of Serplulimab combined with etoposide and carboplatin or cisplatin"
+        ]
+      },
+      {
+        "key": "nivolumab",
+        "display": "nivolumab",
+        "size": 13,
+        "trialMentions": 62,
+        "rawNames": [
+          "Nivolumab",
+          "nivolumab 4.5mg/kg+Paclitaxel (albumin-bound type) 260mg / m2+ Carboplatin AUC5",
+          "MT-304 + Nivolumab",
+          "Combination immunotherapy with Ipilimumab and Nivolumab",
+          "N-803 + Nivolumab",
+          "N-803 + Nivolumab + PD-L1 t-haNK"
+        ]
+      },
+      {
+        "key": "n803",
+        "display": "n 803",
+        "size": 13,
+        "trialMentions": 13,
+        "rawNames": [
+          "N-803 + Pembrolizumab",
+          "N-803 + Nivolumab",
+          "N-803 + Atezolizumab",
+          "N-803 + Avelumab",
+          "N-803 + Durvalumab",
+          "N-803 + Pembrolizumab + PD-L1 t-haNK"
+        ]
+      },
+      {
+        "key": "osimertinib",
+        "display": "osimertinib",
+        "size": 12,
+        "trialMentions": 65,
+        "rawNames": [
+          "Osimertinib",
+          "Osimertinib 80 mg/40 mg",
+          "Tagrisso",
+          "Osimertinib + Savolitinib",
+          "third-generation EGFR TKIs (Almonertinib/Furmonertinib/Osimertinib)",
+          "Osimertinib 80mg/40mg"
+        ]
+      },
+      {
+        "key": "gemcitabine",
+        "display": "gemcitabine",
+        "size": 11,
+        "trialMentions": 32,
+        "rawNames": [
+          "gemcitabine",
+          "Gemcitabine",
+          "Gemcitabine + Nab-paclitaxel",
+          "Gemcitabine + Cisplatin",
+          "Gemcitabine + cisplatin",
+          "Gemcitabine + carboplatin"
+        ]
+      },
+      {
+        "key": "bevacizumab",
+        "display": "bevacizumab",
+        "size": 10,
+        "trialMentions": 33,
+        "rawNames": [
+          "Bevacizumab",
+          "Benmelstobart combined with Bevacizumab and chemotherapy",
+          "bevacizumab",
+          "Sacituzumab Govitecan-Hziy 180 MG plus bevacizumab",
+          "The treatment regimen is Furmonertinib combined with Bevacizumab.",
+          "Disitamab Vedotin + tislelizumab + bevacizumab"
+        ]
+      },
+      {
+        "key": "nabpaclitaxel",
+        "display": "nab paclitaxel",
+        "size": 9,
+        "trialMentions": 27,
+        "rawNames": [
+          "Gemcitabine + Nab-paclitaxel",
+          "Nab-paclitaxel",
+          "Albumin-Bound Paclitaxel",
+          "Nab paclitaxel",
+          "nab-paclitaxel",
+          "Nab-Paclitaxel"
+        ]
+      },
+      {
+        "key": "tislelizumab",
+        "display": "tislelizumab",
+        "size": 8,
+        "trialMentions": 24,
+        "rawNames": [
+          "Tislelizumab",
+          "Tislelizumab (BGB-A317) Plus Chemotherapy (Cisplatin/Carboplatin and Etoposide)",
+          "Tislelizumab + platinum-based chemotherapy",
+          "Tislelizumab + platinum-based chemotherapy + focal radiotherapy",
+          "Disitamab Vedotin + tislelizumab + bevacizumab",
+          "tislelizumab in combination with nab-paclitaxel and platinum chemotherapy"
+        ]
+      },
+      {
+        "key": "amivantamab",
+        "display": "amivantamab",
+        "size": 8,
+        "trialMentions": 18,
+        "rawNames": [
+          "Amivantamab",
+          "Amivantamab+ systemic/ intrathecal Pemetrexed",
+          "Amivantamab Intravenous",
+          "Amivantamab IV",
+          "Amivantamab SC",
+          "Amivantamab 1050mg"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+# deps / build
+node_modules/
+dist/
+*.log
+
+# local tool state
+.claude/
+
+# interview material — repo is public, keep the brief out of git
+Pipeline-Radar-Candidate-Brief.pdf
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+
+# exported reports (app downloads land here during demos)
+pipeline-radar-*.pdf
+pipeline-radar-*.html
+pipeline-radar-*.md
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf

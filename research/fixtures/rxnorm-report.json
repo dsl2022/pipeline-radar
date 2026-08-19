@@ -1,0 +1,2981 @@
+{
+  "summary": {
+    "clean": {
+      "n": 60,
+      "exact": 31,
+      "normalized": 0,
+      "fuzzyHi": 0,
+      "fuzzyLo": 27,
+      "miss": 2,
+      "errors": 0
+    },
+    "researchCode": {
+      "n": 40,
+      "exact": 0,
+      "normalized": 0,
+      "fuzzyHi": 0,
+      "fuzzyLo": 20,
+      "miss": 20,
+      "errors": 0
+    },
+    "doseRoute": {
+      "n": 25,
+      "exact": 3,
+      "normalized": 0,
+      "fuzzyHi": 0,
+      "fuzzyLo": 18,
+      "miss": 4,
+      "errors": 0
+    },
+    "parenthetical": {
+      "n": 20,
+      "exact": 1,
+      "normalized": 0,
+      "fuzzyHi": 0,
+      "fuzzyLo": 19,
+      "miss": 0,
+      "errors": 0
+    },
+    "combo": {
+      "n": 15,
+      "exact": 1,
+      "normalized": 0,
+      "fuzzyHi": 0,
+      "fuzzyLo": 14,
+      "miss": 0,
+      "errors": 0
+    },
+    "brandFromOtherNames": {
+      "n": 25,
+      "exact": 15,
+      "normalized": 0,
+      "fuzzyHi": 0,
+      "fuzzyLo": 4,
+      "miss": 6,
+      "errors": 0
+    }
+  },
+  "latencyMs": {
+    "n": 453,
+    "p50": 27,
+    "p90": 36,
+    "max": 2439
+  },
+  "results": [
+    {
+      "name": "Carboplatin",
+      "cat": "clean",
+      "trialCount": 119,
+      "exactCui": "40048",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 2433,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Lazertinib",
+      "cat": "clean",
+      "trialCount": 7,
+      "exactCui": "2691150",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 2421,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Methotrexate",
+      "cat": "clean",
+      "trialCount": 10,
+      "exactCui": "6851",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 2428,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Tarlatamab",
+      "cat": "clean",
+      "trialCount": 15,
+      "exactCui": "2682954",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 2430,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Etoposide",
+      "cat": "clean",
+      "trialCount": 33,
+      "exactCui": "4179",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 2439,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Entrectinib",
+      "cat": "clean",
+      "trialCount": 5,
+      "exactCui": "2197862",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Ozanimod",
+      "cat": "clean",
+      "trialCount": 5,
+      "exactCui": "2288236",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 27,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Cobimetinib",
+      "cat": "clean",
+      "trialCount": 4,
+      "exactCui": "1722365",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 35,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Vinorelbine",
+      "cat": "clean",
+      "trialCount": 4,
+      "exactCui": "39541",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 28,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Filgrastim",
+      "cat": "clean",
+      "trialCount": 3,
+      "exactCui": "68442",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Trastuzumab Deruxtecan",
+      "cat": "clean",
+      "trialCount": 3,
+      "exactCui": "2267582",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Anlotinib",
+      "cat": "clean",
+      "trialCount": 6,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1939861",
+        "score": 11.638761520385742,
+        "name": "Anlotinib",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 20,
+        "norm": 25,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "cisplatin",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "2555",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Sapanisertib",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "2395271",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 30,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Rescue Medications",
+      "cat": "clean",
+      "trialCount": 3,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2730705",
+        "score": 6.908253765106202,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 28,
+        "fuzzy": 34
+      }
+    },
+    {
+      "name": "Camrelizumab",
+      "cat": "clean",
+      "trialCount": 3,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2169823",
+        "score": 11.2793550491333,
+        "name": "Camrelizumab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 25,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "crizotinib",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "1148495",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 34,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Budigalimab",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2540134",
+        "score": 11.638761520385742,
+        "name": "Budigalimab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 24,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "Danvatirsen",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2223874",
+        "score": 11.638761520385742,
+        "name": "Danvatirsen",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 27,
+        "fuzzy": 23
+      }
+    },
+    {
+      "name": "Paracetamol",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "161",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 27,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Vedolizumab",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "1538097",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Dexamethasone",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "3264",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 32,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Natalizumab",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "354770",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 21,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Givinostat",
+      "cat": "clean",
+      "trialCount": 2,
+      "exactCui": "2678889",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "atezolizumab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "1792776",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Consolidation durvalumab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1919503",
+        "score": 14.1508207321167,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 26,
+        "fuzzy": 34
+      }
+    },
+    {
+      "name": "Transporter Cocktail",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1455599",
+        "score": 8.607076644897461,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 21,
+        "fuzzy": 29
+      }
+    },
+    {
+      "name": "Ipatasertib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1507790",
+        "score": 11.638761520385742,
+        "name": "Ipatasertib",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 27,
+        "norm": 31,
+        "fuzzy": 32
+      }
+    },
+    {
+      "name": "Busulfan",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "1828",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 33,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Anti-Diarrheal Agent",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "215316",
+        "score": 24.407878875732422,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 36,
+        "norm": 35,
+        "fuzzy": 46
+      }
+    },
+    {
+      "name": "Patritumab deruxtecan",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2703535",
+        "score": 21.622509002685547,
+        "name": "patritumab deruxtecan",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 27,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "Lorviqua",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": 23,
+        "fuzzy": 22
+      }
+    },
+    {
+      "name": "Gadolinium",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "1310171",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Administration of Vorolanib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2208051",
+        "score": 11.638761520385742,
+        "name": "Vorolanib",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 30,
+        "norm": 32,
+        "fuzzy": 42
+      }
+    },
+    {
+      "name": "Cirtuvivint",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2622250",
+        "score": 11.638761520385742,
+        "name": "Cirtuvivint",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 26,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "Carfilzomib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "1302966",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Mocetinostat",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "776454",
+        "score": 11.638761520385742,
+        "name": "Mocetinostat",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 26,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "Glecirasib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2683745",
+        "score": 11.638761520385742,
+        "name": "Glecirasib",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 37,
+        "norm": 27,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Vincristine Sulfate",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "11203",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Trametinib Dimethyl Sulfoxide",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "1425098",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 26,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Sunitinib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "357977",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Imzokitug",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 27,
+        "norm": 25,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "Placebo Aumolertinib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "8375",
+        "score": 12.936038970947266,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 27,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "Boserolimab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2629257",
+        "score": 11.638761520385742,
+        "name": "Boserolimab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 30,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "Zelenectide pevedotin",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1147320",
+        "score": 7.697880506515503,
+        "name": "Brentuximab Vedotin",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 29,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "Valemetostat",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2666411",
+        "score": 11.638761520385742,
+        "name": "Valemetostat",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 24,
+        "fuzzy": 29
+      }
+    },
+    {
+      "name": "Adjuvant tislelizumab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2677426",
+        "score": 14.253608703613281,
+        "name": "Tislelizumab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 23,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "Cobolimab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2471513",
+        "score": 11.638761520385742,
+        "name": "Cobolimab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 28,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "Pregnancy test",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "106572",
+        "score": 17.70813751220703,
+        "name": "PREGNANCY TEST",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 24,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "Selinexor",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "2178390",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Cilostazol",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "21107",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Midazolam",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "6960",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 26,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Chemotherapy drug",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2746259",
+        "score": 7.668715804776816,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 26,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Optional collection",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1736009",
+        "score": 14.154786109924316,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 23,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "Ofatunumab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "712566",
+        "score": 8.361194610595703,
+        "name": "Ofatumumab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 24,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "Tralokinumab",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "2589225",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Amisodin",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2727988",
+        "score": 9.638761520385742,
+        "name": "Amisodin",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 35,
+        "fuzzy": 36
+      }
+    },
+    {
+      "name": "envudeucitinib",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2743730",
+        "score": 11.638761520385742,
+        "name": "Envudeucitinib",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 28,
+        "fuzzy": 26
+      }
+    },
+    {
+      "name": "cerebro-spinal fluid",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "93220",
+        "score": 12.43545377254486,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 27,
+        "norm": 26,
+        "fuzzy": 35
+      }
+    },
+    {
+      "name": "Sulfasalazine",
+      "cat": "clean",
+      "trialCount": 1,
+      "exactCui": "9524",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "PLN-101095",
+      "cat": "researchCode",
+      "trialCount": 6,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1721102",
+        "score": 7.153561104536056,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 31,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "TNG462",
+      "cat": "researchCode",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": 29,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "YL201",
+      "cat": "researchCode",
+      "trialCount": 3,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 31,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "HMBD-001",
+      "cat": "researchCode",
+      "trialCount": 3,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": 31,
+        "fuzzy": 29
+      }
+    },
+    {
+      "name": "REGN7508",
+      "cat": "researchCode",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": 27,
+        "fuzzy": 34
+      }
+    },
+    {
+      "name": "M0324",
+      "cat": "researchCode",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": 24,
+        "fuzzy": 23
+      }
+    },
+    {
+      "name": "AOC 1044",
+      "cat": "researchCode",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2667013",
+        "score": 8.549674034118652,
+        "name": "AOC 1001",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 27,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "ASP3082",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2739826",
+        "score": 9.638761520385742,
+        "name": "ASP3082",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 28,
+        "fuzzy": 26
+      }
+    },
+    {
+      "name": "BMS-986340",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2169504",
+        "score": 6.517077445983887,
+        "name": "BMS-830216",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 30,
+        "norm": 26,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "BMS-986463",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2169504",
+        "score": 6.517077445983887,
+        "name": "BMS-830216",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 27,
+        "fuzzy": 34
+      }
+    },
+    {
+      "name": "AB-106",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "127395",
+        "score": 9.222801303863525,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 22,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "SAR445877",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": 31,
+        "fuzzy": 22
+      }
+    },
+    {
+      "name": "IPH4502",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 23,
+        "fuzzy": 26
+      }
+    },
+    {
+      "name": "SY-5007",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2616481",
+        "score": 6.627424240112305,
+        "name": "SY-5609",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 24,
+        "fuzzy": 29
+      }
+    },
+    {
+      "name": "CTX-8371",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "3002",
+        "score": 8.506393432617188,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 39,
+        "norm": 50,
+        "fuzzy": 40
+      }
+    },
+    {
+      "name": "NT-175",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2629292",
+        "score": 6.323577880859375,
+        "name": "NT-219",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 26,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "NKT3964",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": 24,
+        "fuzzy": 24
+      }
+    },
+    {
+      "name": "HLX43",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": 29,
+        "fuzzy": 24
+      }
+    },
+    {
+      "name": "INCA33890",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 27,
+        "norm": 33,
+        "fuzzy": 36
+      }
+    },
+    {
+      "name": "LB2102",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 24,
+        "fuzzy": 22
+      }
+    },
+    {
+      "name": "PHN-012",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2044704",
+        "score": 6.48978754401207,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 35,
+        "norm": 29,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "STK-012",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2613817",
+        "score": 8.168639183044434,
+        "name": "STK-001",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 31,
+        "norm": 27,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "BGB-15025",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2471491",
+        "score": 8.12219033241272,
+        "name": "BGB-DXP593",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 24,
+        "fuzzy": 26
+      }
+    },
+    {
+      "name": "JSKN016",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 36,
+        "norm": 26,
+        "fuzzy": 24
+      }
+    },
+    {
+      "name": "IM-1617",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "4461",
+        "score": 6.235742238467336,
+        "name": "fluocinolone 16,17-acetonide",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 26,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "ABT-101",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1567420",
+        "score": 12.684253692626953,
+        "name": "ABT-639",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 31,
+        "norm": 29,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "MK-3475",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "203435",
+        "score": 6.375814437866211,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 33,
+        "norm": 32,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "MK-0482",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2629258",
+        "score": 30.12141990661621,
+        "name": "MK-0482",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 35,
+        "norm": 36,
+        "fuzzy": 42
+      }
+    },
+    {
+      "name": "RMC-6291",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2721408",
+        "score": 6.918806584516734,
+        "name": "PTPN11 inhibitor RMC-4630",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 38,
+        "fuzzy": 23
+      }
+    },
+    {
+      "name": "BMS-986523",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2169504",
+        "score": 6.517077445983887,
+        "name": "BMS-830216",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 30,
+        "norm": 27,
+        "fuzzy": 29
+      }
+    },
+    {
+      "name": "IBI363",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": 25,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "ABBV-637",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2631779",
+        "score": 7.506349563598633,
+        "name": "ABBV-514",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 33,
+        "fuzzy": 29
+      }
+    },
+    {
+      "name": "LCB84",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": 24,
+        "fuzzy": 24
+      }
+    },
+    {
+      "name": "KFA115",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 30,
+        "norm": 32,
+        "fuzzy": 32
+      }
+    },
+    {
+      "name": "AB248",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 34,
+        "norm": 31,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "NLY01",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 27,
+        "fuzzy": 23
+      }
+    },
+    {
+      "name": "IVL4002",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 30,
+        "norm": 26,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "LY3541860",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 29,
+        "fuzzy": 26
+      }
+    },
+    {
+      "name": "XBD173",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": 28,
+        "fuzzy": 24
+      }
+    },
+    {
+      "name": "Pembrolizumab Injection",
+      "cat": "doseRoute",
+      "trialCount": 2,
+      "exactCui": "1657745",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Oral MRT-2359",
+      "cat": "doseRoute",
+      "trialCount": 6,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2666787",
+        "score": 33.73955535888672,
+        "name": "MRT-2359",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 27,
+        "norm": 26,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "SAT-3247",
+      "cat": "researchCode",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1540283",
+        "score": 7.5337471723556515,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 31,
+        "fuzzy": 27
+      }
+    },
+    {
+      "name": "AK112 Injection",
+      "cat": "doseRoute",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2686258",
+        "score": 0.34918285919530523,
+        "name": "IMMUNOGLOBULIN G1 (240-ALANINE,241-ALANINE), ANTI-(HUMAN VASCULAR ENDOTHELIAL GROWTH FACTOR A) (HUMAN-MUS MUSCULUS MONOCLONAL AK112 .GAMMA.1-CHAIN) FUSION PROTEIN WITH PEPTIDE LINKER (GGGS)4 FUSION PROTEIN WITH IMMUNOGLOBULIN ANTI-(HUMAN PROGRAMMED CELL",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 25,
+        "fuzzy": 24
+      }
+    },
+    {
+      "name": "Pembrolizumab 400 mg",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1547545",
+        "score": 11.687459945678711,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 25,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "Pooled Mutant KRAS-Targeted Long Peptide Vaccine 0.3mg each; 1.8mg total peptides",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2475377",
+        "score": 17.457780520121258,
+        "name": "Multi-peptide vaccination",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 36,
+        "fuzzy": 56
+      }
+    },
+    {
+      "name": "Amivantamab Intravenous",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2549199",
+        "score": 13.594837188720703,
+        "name": "amivantamab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 23,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "Placebo AST2818 80mg//40 mg",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "8375",
+        "score": 10.936038970947266,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 23,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "BC008-1A 1200mg",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2169772",
+        "score": 5.17660231590271,
+        "name": "NOP-1A",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 23,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Osimertinib 80 MG",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": "1721580",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Adebrelimab Injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2471561",
+        "score": 11.638761520385742,
+        "name": "Adebrelimab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 28,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Esomeprazole 40 mg",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": "331599",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 28,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Oral Paclitaxel Solution",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "377111",
+        "score": 13.591373443603516,
+        "name": "paclitaxel Injectable Solution",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 28,
+        "fuzzy": 32
+      }
+    },
+    {
+      "name": "Atezolizumab 1200 mg e.v. q21",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1792780",
+        "score": 12.894633404254915,
+        "name": "atezolizumab 1200 MG per 20 ML Injection",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 40,
+        "norm": 23,
+        "fuzzy": 35
+      }
+    },
+    {
+      "name": "TQB6411 for Injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 31,
+        "norm": 29,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "Oral repotrectinib (TPX-0005)",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2670644",
+        "score": 12.269599914550781,
+        "name": "Repotrectinib",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 25,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "NC318 400 mg",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": 23,
+        "fuzzy": 23
+      }
+    },
+    {
+      "name": "JYP0322 150 mg bid",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 21,
+        "norm": 25,
+        "fuzzy": 22
+      }
+    },
+    {
+      "name": "Tifcemalimab injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2686241",
+        "score": 11.638761520385742,
+        "name": "Tifcemalimab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 26,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Cromolyn Sodium (34.2 mg BID)",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "3538",
+        "score": 12.428472518920898,
+        "name": "Cromolyn Sodium",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 27,
+        "norm": 25,
+        "fuzzy": 55
+      }
+    },
+    {
+      "name": "RE104 for Injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": 26,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Cladribine Subcutaneous Injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1731084",
+        "score": 14.372227668762207,
+        "name": "cladribine Injection",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 21,
+        "norm": 26,
+        "fuzzy": 35
+      }
+    },
+    {
+      "name": "Placebo tablet",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "375221",
+        "score": 13.035236704826355,
+        "name": "placebo Oral Tablet",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 22,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Sevasemten 5 mg",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2686332",
+        "score": 9.638761520385742,
+        "name": "Sevasemten",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 30,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "TyboWe® Adalimumab Injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1656695",
+        "score": 13.036930084228516,
+        "name": "adalimumab Injection",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 26,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "Pembrolizumab (KEYTRUDA®)",
+      "cat": "parenthetical",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1657748",
+        "score": 18.908397674560547,
+        "name": "pembrolizumab Injection [Keytruda]",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 29,
+        "fuzzy": 35
+      }
+    },
+    {
+      "name": "TILD sub-cutaneous (SC) injection",
+      "cat": "doseRoute",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1486788",
+        "score": 8.202806210517883,
+        "name": "Sub Zero",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 29,
+        "norm": 35,
+        "fuzzy": 37
+      }
+    },
+    {
+      "name": "Sacituzumab Govitecan-hziy (SG)",
+      "cat": "parenthetical",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2360530",
+        "score": 39.128849029541016,
+        "name": "sacituzumab govitecan-hziy",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 21,
+        "norm": 28,
+        "fuzzy": 35
+      }
+    },
+    {
+      "name": "rapcabtagene autoleucel (YTB323)",
+      "cat": "parenthetical",
+      "trialCount": 2,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2729847",
+        "score": 15.419797897338867,
+        "name": "Arlocabtagene Autoleucel",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 31,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "HER3-DXd (FL-DP)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2703535",
+        "score": 32.22697448730469,
+        "name": "HER3-DXd",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 20,
+        "norm": 23,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Amrubicin (Japan only)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "232157",
+        "score": 11.2793550491333,
+        "name": "amrubicin",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 27,
+        "fuzzy": 34
+      }
+    },
+    {
+      "name": "Carboplatin (or cisplatin if carboplatin is not tolerated)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "40048",
+        "score": 19.242481231689453,
+        "name": "Carboplatin",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 27,
+        "norm": 26,
+        "fuzzy": 39
+      }
+    },
+    {
+      "name": "pembrolizumab (KEYTRUDA®)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1657748",
+        "score": 18.908397674560547,
+        "name": "pembrolizumab Injection [Keytruda]",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 24,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "JS111 capsules (AP-L1898)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "733",
+        "score": 11.308527946472168,
+        "name": "AP",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 33,
+        "norm": 28,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "silevertinib (BDTX-1535) monotherapy",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2747377",
+        "score": 5.09795755147934,
+        "name": "allogeneic regulatory T cell immunotherapy with HSPC and T cells Injection [Tregzi]",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 23,
+        "fuzzy": 33
+      }
+    },
+    {
+      "name": "Sacituzumab govitecan-hziy (SG)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2360530",
+        "score": 39.128849029541016,
+        "name": "sacituzumab govitecan-hziy",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 28,
+        "norm": 25,
+        "fuzzy": 36
+      }
+    },
+    {
+      "name": "Sacituzumab tirumotecan (sac-TMT)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2686393",
+        "score": 37.424076080322266,
+        "name": "sac-TMT",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 31,
+        "norm": 27,
+        "fuzzy": 35
+      }
+    },
+    {
+      "name": "Visugromab RDE (recommended dose for expansion)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2686223",
+        "score": 11.638761520385742,
+        "name": "Visugromab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 33,
+        "fuzzy": 44
+      }
+    },
+    {
+      "name": "Part C - AZD6094 monotherapy (Japan only)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2115693",
+        "score": 9.948507295336043,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 25,
+        "fuzzy": 46
+      }
+    },
+    {
+      "name": "Steroid Mouthwash (dexamethasone or equivalent)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1939573",
+        "score": 11.524930953979492,
+        "name": "ORE-1001",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 34,
+        "norm": 27,
+        "fuzzy": 54
+      }
+    },
+    {
+      "name": "Tumor-infiltrating Lymphocytes (TIL)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2675860",
+        "score": 28.906112060546874,
+        "name": "Autologous tumor infiltrating lymphocytes",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 25,
+        "fuzzy": 37
+      }
+    },
+    {
+      "name": "Obecabtagene autoleucel (obe-cel)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2698195",
+        "score": 19.754615783691406,
+        "name": "Obecabtagene autoleucel",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 29,
+        "norm": 28,
+        "fuzzy": 36
+      }
+    },
+    {
+      "name": "Tetrahydrocannabinol (THC)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": "10402",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Extavia (IFNβ-1-b, Novartis Europharm Limited)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "860241",
+        "score": 12.91025161743164,
+        "name": "Extavia",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 26,
+        "fuzzy": 39
+      }
+    },
+    {
+      "name": "Anti-Mullerian hormone (AMH) level",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "30325",
+        "score": 30.86948585510254,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 45,
+        "norm": 49,
+        "fuzzy": 66
+      }
+    },
+    {
+      "name": "Benmelstobart combined with chemotherapy",
+      "cat": "combo",
+      "trialCount": 5,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1429406",
+        "score": 12.096861233711241,
+        "name": "aminophenazone, combinations with psycholeptics",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 25,
+        "fuzzy": 41
+      }
+    },
+    {
+      "name": "Etoposide 100 mg/m^2",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "329753",
+        "score": 12.286113739013672,
+        "name": "etoposide 100 MG",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 27,
+        "fuzzy": 34
+      }
+    },
+    {
+      "name": "Gemcitabine + Nab-paclitaxel",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "486610",
+        "score": 32.921295166015625,
+        "name": "nab-paclitaxel",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 26,
+        "fuzzy": 58
+      }
+    },
+    {
+      "name": "N-803 + Atezolizumab",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2715526",
+        "score": 14.892080544442281,
+        "name": "N-803 COMPONENT IL-15R.ALPHA.SU/FC FUSION PROTEIN",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 23,
+        "fuzzy": 39
+      }
+    },
+    {
+      "name": "Pembrolizumab 25 MG/ML [Keytruda]",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": "1547551",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 28,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Pemetrexed+Cisplatin or Carboplatin",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2555",
+        "score": 13.454776763916016,
+        "name": "Cisplatin",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 23,
+        "norm": 24,
+        "fuzzy": 32
+      }
+    },
+    {
+      "name": "23-valent pneumococcal polysaccharide vaccine (23-PPV)",
+      "cat": "parenthetical",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1658470",
+        "score": 35.41819763183594,
+        "name": "PNEUMOCOCCAL 23-VALENT POLYSACCHARIDE VACCINE",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 57,
+        "norm": 80,
+        "fuzzy": 83
+      }
+    },
+    {
+      "name": "Osimertinib 80mg/40mg",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1721580",
+        "score": 14.371456146240234,
+        "name": "osimertinib 80 MG",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 27,
+        "norm": 26,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "carboplatin/cisplatin-etoposide",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2555",
+        "score": 13.454776763916016,
+        "name": "Cisplatin",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 27,
+        "fuzzy": 38
+      }
+    },
+    {
+      "name": "QL1706 plus chemotherapy",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2631760",
+        "score": 9.638761520385742,
+        "name": "QL1706",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 25,
+        "fuzzy": 32
+      }
+    },
+    {
+      "name": "Recombinant Human EGF-rP64K/Montanide ISA 51 Vaccine",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "398383",
+        "score": 18.54753875732422,
+        "name": "Montanide ISA 51",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 27,
+        "fuzzy": 46
+      }
+    },
+    {
+      "name": "The treatment regimen is Furmonertinib combined with Bevacizumab.",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "253337",
+        "score": 12.838603019714355,
+        "name": "Bevacizumab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 47,
+        "fuzzy": 78
+      }
+    },
+    {
+      "name": "Anlotinib plus the new Immune Checkpoint Inhibitors.",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2471467",
+        "score": 14.69849505078063,
+        "name": "Anti-tim3 checkpoint inhibitor mbg453",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 29,
+        "fuzzy": 45
+      }
+    },
+    {
+      "name": "Avastin",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "337521",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 25,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Part B - AZD9291 in combination with MEDI4736",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1429441",
+        "score": 11.882007574856283,
+        "name": "haemophilus influenzae B, combinations with toxoids",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 24,
+        "norm": 23,
+        "fuzzy": 45
+      }
+    },
+    {
+      "name": "Alymsys",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2599045",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 28,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Avzivi",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2700737",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Carboplatin/Cisplatin+Pemetrexed+Pembrolizumab/Cemiplimab for 4 cycles and then maintenance with Pemetrexed+Pembrolizumab/Cemiplimab up to 2 years or disease progression or unacceptable toxicity",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2058826",
+        "score": 19.357378005981445,
+        "name": "CEMIPLIMAB",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 22,
+        "norm": 26,
+        "fuzzy": 72
+      }
+    },
+    {
+      "name": "ipilimumab+pembrolizumab or ipilimumab+durvalumab, idarubicin, bevacizumab",
+      "cat": "combo",
+      "trialCount": 1,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "1094833",
+        "score": 21.006900787353516,
+        "name": "Ipilimumab",
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 26,
+        "fuzzy": 38
+      }
+    },
+    {
+      "name": "Mvasi",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2046141",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Jobevne",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2712050",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 29,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Equidacent",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "221159",
+        "score": 2.721794254374504,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 21,
+        "norm": 24,
+        "fuzzy": 30
+      }
+    },
+    {
+      "name": "Aybintio",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 26,
+        "norm": 26,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "Vegzelma",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2627652",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Zirabev",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2268040",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Onbevzi",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": 27,
+        "fuzzy": 28
+      }
+    },
+    {
+      "name": "Surgery",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "2049149",
+        "score": 5.678220386079881,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 66,
+        "norm": 60,
+        "fuzzy": 40
+      }
+    },
+    {
+      "name": "Tevimbra",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2677434",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Oyavas",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 35,
+        "norm": 33,
+        "fuzzy": 26
+      }
+    },
+    {
+      "name": "Imdelltra",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "2682962",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Paraplatin",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "152200",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 27,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Alimta",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "323879",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 22,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Keytruda",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "1547550",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Lambrolizumab",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "1547545",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Opdivo",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "1597881",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 26,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Temodar",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": "261663",
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 26,
+        "norm": null,
+        "fuzzy": null
+      }
+    },
+    {
+      "name": "Immunological",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "5739",
+        "score": 7.502596388816834,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 26,
+        "norm": 27,
+        "fuzzy": 31
+      }
+    },
+    {
+      "name": "Temcad",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 23,
+        "norm": 24,
+        "fuzzy": 25
+      }
+    },
+    {
+      "name": "Temodal",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": {
+        "rxcui": "261663",
+        "score": 8.374907493591309,
+        "name": null,
+        "rank": "1"
+      },
+      "latency": {
+        "exact": 25,
+        "norm": 22,
+        "fuzzy": 39
+      }
+    },
+    {
+      "name": "Temomedac",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 30,
+        "fuzzy": 22
+      }
+    },
+    {
+      "name": "Gliotem",
+      "cat": "brandFromOtherNames",
+      "trialCount": 0,
+      "exactCui": null,
+      "normCui": null,
+      "fuzzyTop": null,
+      "latency": {
+        "exact": 24,
+        "norm": 31,
+        "fuzzy": 25
+      }
+    }
+  ]
+}

@@ -1,0 +1,486 @@
+[
+  {
+    "name": "pembrolizumab",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 534,
+      "total": 2,
+      "appNo": "BLA125514",
+      "sponsor": "MERCK SHARP DOHME",
+      "genericName": [
+        "PEMBROLIZUMAB"
+      ],
+      "brandName": [
+        "KEYTRUDA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 534
+    }
+  },
+  {
+    "name": "osimertinib",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 153,
+      "total": 1,
+      "appNo": "NDA208065",
+      "sponsor": "ASTRAZENECA",
+      "genericName": [
+        "OSIMERTINIB"
+      ],
+      "brandName": [
+        "TAGRISSO"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 153
+    }
+  },
+  {
+    "name": "carboplatin",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 168,
+      "total": 9,
+      "appNo": "ANDA076517",
+      "sponsor": "HOSPIRA",
+      "genericName": [
+        "CARBOPLATIN"
+      ],
+      "brandName": [
+        "CARBOPLATIN"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 168
+    }
+  },
+  {
+    "name": "lorlatinib",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 164,
+      "total": 1,
+      "appNo": "NDA210868",
+      "sponsor": "PFIZER",
+      "genericName": [
+        "LORLATINIB"
+      ],
+      "brandName": [
+        "LORBRENA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 164
+    }
+  },
+  {
+    "name": "sacituzumab govitecan",
+    "expect": "approved-multiword",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 149,
+      "total": 1,
+      "appNo": "BLA761115",
+      "sponsor": "IMMUNOMEDICS INC",
+      "genericName": [
+        "SACITUZUMAB GOVITECAN"
+      ],
+      "brandName": [
+        "TRODELVY"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 149
+    }
+  },
+  {
+    "name": "ustekinumab",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 150,
+      "total": 12,
+      "appNo": "BLA761373",
+      "sponsor": "SAMSUNG BIOEPIS CO LTD",
+      "genericName": [
+        "USTEKINUMAB-TTWE"
+      ],
+      "brandName": [
+        "USTEKINUMAB-TTWE",
+        "PYZCHIVA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 150
+    }
+  },
+  {
+    "name": "durvalumab",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 253,
+      "total": 1,
+      "appNo": "BLA761069",
+      "sponsor": "ASTRAZENECA UK LTD",
+      "genericName": [
+        "DURVALUMAB"
+      ],
+      "brandName": [
+        "IMFINZI"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 253
+    }
+  },
+  {
+    "name": "amivantamab",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 163,
+      "total": 2,
+      "appNo": "BLA761433",
+      "sponsor": "JANSSEN BIOTECH",
+      "genericName": [
+        "AMIVANTAMAB AND HYALURONIDASE-LPUJ (HUMAN RECOMBINANT)"
+      ],
+      "brandName": [
+        "RYBREVANT FASPRO"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 163
+    }
+  },
+  {
+    "name": "guselkumab",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 158,
+      "total": 1,
+      "appNo": "BLA761061",
+      "sponsor": "JANSSEN BIOTECH",
+      "genericName": [
+        "GUSELKUMAB"
+      ],
+      "brandName": [
+        "TREMFYA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 158
+    }
+  },
+  {
+    "name": "datopotamab deruxtecan",
+    "expect": "approved-2024",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 228,
+      "total": 1,
+      "appNo": "BLA761394",
+      "sponsor": "DAIICHI SANKYO INC",
+      "genericName": [
+        "DATOPOTAMAB DERUXTECAN"
+      ],
+      "brandName": [
+        "DATROWAY"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 228
+    }
+  },
+  {
+    "name": "nab-paclitaxel",
+    "expect": "formulation-name-mismatch",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 262,
+      "brand": 368,
+      "ingredient": 247
+    }
+  },
+  {
+    "name": "temozolomide",
+    "expect": "approved",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 218,
+      "total": 10,
+      "appNo": "ANDA201742",
+      "sponsor": "SUN PHARM",
+      "genericName": [
+        "TEMOZOLOMIDE"
+      ],
+      "brandName": [
+        "TEMOZOLOMIDE"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 218
+    }
+  },
+  {
+    "name": "afatinib",
+    "expect": "salt-form: afatinib dimaleate",
+    "via": "generic_name",
+    "detail": {
+      "hit": true,
+      "ms": 165,
+      "total": 1,
+      "appNo": "NDA201292",
+      "sponsor": "BOEHRINGER INGELHEIM",
+      "genericName": [
+        "AFATINIB"
+      ],
+      "brandName": [
+        "GILOTRIF"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 165
+    }
+  },
+  {
+    "name": "Keytruda",
+    "expect": "brand",
+    "via": "brand_name",
+    "detail": {
+      "hit": true,
+      "ms": 203,
+      "total": 2,
+      "appNo": "BLA125514",
+      "sponsor": "MERCK SHARP DOHME",
+      "genericName": [
+        "PEMBROLIZUMAB"
+      ],
+      "brandName": [
+        "KEYTRUDA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 153,
+      "brand": 203
+    }
+  },
+  {
+    "name": "Tagrisso",
+    "expect": "brand",
+    "via": "brand_name",
+    "detail": {
+      "hit": true,
+      "ms": 148,
+      "total": 1,
+      "appNo": "NDA208065",
+      "sponsor": "ASTRAZENECA",
+      "genericName": [
+        "OSIMERTINIB"
+      ],
+      "brandName": [
+        "TAGRISSO"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 255,
+      "brand": 148
+    }
+  },
+  {
+    "name": "Lorbrena",
+    "expect": "brand",
+    "via": "brand_name",
+    "detail": {
+      "hit": true,
+      "ms": 146,
+      "total": 1,
+      "appNo": "NDA210868",
+      "sponsor": "PFIZER",
+      "genericName": [
+        "LORLATINIB"
+      ],
+      "brandName": [
+        "LORBRENA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 144,
+      "brand": 146
+    }
+  },
+  {
+    "name": "Lorviqua",
+    "expect": "EU-brand-miss",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 312,
+      "brand": 151,
+      "ingredient": 190
+    }
+  },
+  {
+    "name": "Stelara",
+    "expect": "brand",
+    "via": "brand_name",
+    "detail": {
+      "hit": true,
+      "ms": 406,
+      "total": 2,
+      "appNo": "BLA761044",
+      "sponsor": "JANSSEN BIOTECH",
+      "genericName": [
+        "USTEKINUMAB"
+      ],
+      "brandName": [
+        "USTEKINUMAB",
+        "STELARA"
+      ],
+      "marketingStatus": "Prescription",
+      "hasOpenfda": true
+    },
+    "latencies": {
+      "generic": 162,
+      "brand": 406
+    }
+  },
+  {
+    "name": "anlotinib",
+    "expect": "investigational (China-approved)",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 187,
+      "brand": 143,
+      "ingredient": 176
+    }
+  },
+  {
+    "name": "camrelizumab",
+    "expect": "investigational (China-approved)",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 152,
+      "brand": 158,
+      "ingredient": 307
+    }
+  },
+  {
+    "name": "ivonescimab",
+    "expect": "investigational",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 150,
+      "brand": 143,
+      "ingredient": 207
+    }
+  },
+  {
+    "name": "MK-3475",
+    "expect": "research-code-miss",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 234,
+      "brand": 153,
+      "ingredient": 145
+    }
+  },
+  {
+    "name": "AZD9291",
+    "expect": "research-code-miss",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 161,
+      "brand": 151,
+      "ingredient": 219
+    }
+  },
+  {
+    "name": "Pembrolizumab (KEYTRUDA®)",
+    "expect": "messy-miss",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 146,
+      "brand": 142,
+      "ingredient": 159
+    }
+  },
+  {
+    "name": "Osimertinib 80 mg",
+    "expect": "messy-miss",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 464,
+      "brand": 160,
+      "ingredient": 147
+    }
+  },
+  {
+    "name": "Carboplatin + Pemetrexed + Pembrolizumab",
+    "expect": "messy-miss",
+    "via": "MISS",
+    "detail": null,
+    "latencies": {
+      "generic": 169,
+      "brand": 145,
+      "ingredient": 153
+    }
+  }
+]
