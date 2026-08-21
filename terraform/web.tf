@@ -81,7 +81,7 @@ resource "aws_s3_bucket_policy" "web" {
 # a rebuild uploads only what changed.
 
 locals {
-  dist_dir = "${path.module}/../pipeline-radar/dist"
+  dist_dir   = "${path.module}/../pipeline-radar/dist"
   dist_files = fileexists("${local.dist_dir}") ? fileset(local.dist_dir, "**") : toset([])
 
   content_types = {
