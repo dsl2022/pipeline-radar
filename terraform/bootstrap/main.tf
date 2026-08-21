@@ -36,6 +36,24 @@ variable "deploy_ref" {
   default     = "refs/heads/main"
 }
 
+# GitHub can issue either a plain sub claim (repo:owner/repo:ref:...) or an
+# ID-qualified one (repo:owner@<owner_id>/repo@<repo_id>:ref:...) depending on
+# whether immutable subject claims are enabled. The numeric IDs survive a
+# rename, so a deleted-and-recreated repo of the same name can't inherit trust.
+# Both are pinned exactly - see the sub condition below.
+#   gh api repos/OWNER/REPO --jq '{repo_id: .id, owner_id: .owner.id}'
+variable "github_owner_id" {
+  type        = number
+  description = "Numeric GitHub account id of the repo owner"
+  default     = 11345415
+}
+
+variable "github_repo_id" {
+  type        = number
+  description = "Numeric GitHub repository id"
+  default     = 1339087067
+}
+
 variable "project" {
   type    = string
   default = "pipeline-radar"
@@ -43,6 +61,14 @@ variable "project" {
 
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
+locals {
+  # "owner/repo" -> "owner@<owner_id>/repo@<repo_id>"
+  github_owner = split("/", var.github_repo)[0]
+  github_name  = split("/", var.github_repo)[1]
+
+  github_repo_qualified = "${local.github_owner}@${var.github_owner_id}/${local.github_name}@${var.github_repo_id}"
+}
 
 # --- Terraform state backend -------------------------------------------------
 # CI runners are ephemeral, so state has to live remotely. Versioning is on so
@@ -142,11 +168,16 @@ data "aws_iam_policy_document" "assume" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Exact ref, not a wildcard: a fork PR can never assume this role.
+    # Exact ref, not a wildcard: a fork PR can never assume this role. Two
+    # exact values rather than a StringLike wildcard - StringEquals ORs the
+    # list, so both claim formats are accepted without loosening the match.
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:${var.deploy_ref}"]
+      values = [
+        "repo:${var.github_repo}:ref:${var.deploy_ref}",
+        "repo:${local.github_repo_qualified}:ref:${var.deploy_ref}",
+      ]
     }
   }
 }
