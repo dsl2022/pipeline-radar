@@ -82,6 +82,7 @@ resource "aws_s3_bucket_policy" "web" {
 
 locals {
   dist_dir = "${path.module}/../pipeline-radar/dist"
+  dist_files = fileexists("${local.dist_dir}") ? fileset(local.dist_dir, "**") : toset([])
 
   content_types = {
     html  = "text/html"
@@ -99,7 +100,7 @@ locals {
 }
 
 resource "aws_s3_object" "web" {
-  for_each = fileset(local.dist_dir, "**")
+  for_each = local.dist_files
 
   bucket       = aws_s3_bucket.web.id
   key          = each.value

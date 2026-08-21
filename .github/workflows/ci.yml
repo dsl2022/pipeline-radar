@@ -43,10 +43,21 @@ jobs:
 
   terraform-validate:
     # Catches infra errors pre-merge. fmt + validate need no AWS credentials,
-    # so this runs on fork PRs too.
+    # so this runs on fork PRs too. Build the frontend first because the app
+    # layer expects pipeline-radar/dist to exist when it uploads the web bundle.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pipeline-radar/package-lock.json
+      - name: Build frontend for bundle upload checks
+        working-directory: pipeline-radar
+        run: |
+          npm ci
+          npm run build
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.9.8
