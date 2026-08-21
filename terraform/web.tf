@@ -81,8 +81,9 @@ resource "aws_s3_bucket_policy" "web" {
 # a rebuild uploads only what changed.
 
 locals {
-  dist_dir   = "${path.module}/../pipeline-radar/dist"
-  dist_files = fileexists("${local.dist_dir}") ? fileset(local.dist_dir, "**") : toset([])
+  dist_dir    = "${path.module}/../pipeline-radar/dist"
+  dist_index  = "${local.dist_dir}/index.html"
+  dist_files  = fileexists(local.dist_index) ? fileset(local.dist_dir, "**") : toset([])
 
   content_types = {
     html  = "text/html"
