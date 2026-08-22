@@ -1,0 +1,23 @@
+{
+  "name": "@pipeline-radar/shared",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Pure data logic shared by the web app and the API/agent: trial mapping, summaries, drug rollup, report + watchlist diffing. No DOM, no React, no network client.",
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.13.3",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
+    "typescript": "~6.0.2"
+  }
+}

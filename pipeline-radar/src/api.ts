@@ -1,6 +1,6 @@
-import { mapStudy, type RawStudy } from './mapStudy';
-import type { SearchResult } from './types';
-import sampleLungCancer from './samples/lung-cancer.json';
+import { mapStudy, type RawStudy } from '@pipeline-radar/shared/mapStudy';
+import type { SearchResult } from '@pipeline-radar/shared/types';
+import sampleLungCancer from '@pipeline-radar/shared/samples/lung-cancer.json';
 
 // Relative /api base: the proxy service (api/) forwards to clinicaltrials.gov.
 // Locally Vite's dev proxy does the same forwarding (vite.config.ts); in prod

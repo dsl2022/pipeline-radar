@@ -7,6 +7,11 @@
     "types": ["vite/client"],
     "allowArbitraryExtensions": true,
     "resolveJsonModule": true,
+
+    /* Shared workspace package -> source (mirrors the Vite alias) */
+    "paths": {
+      "@pipeline-radar/shared/*": ["../shared/src/*"]
+    },
     "skipLibCheck": true,
 
     /* Bundler mode */

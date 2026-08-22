@@ -9,12 +9,16 @@ AWS deployment path (Terraform + GitHub OIDC + S3/CloudFront + ECS Fargate).
 
 ## Quick start
 
+One `npm ci` at the repo root installs all three workspaces.
+
 ```bash
+npm ci
+
 # API proxy (port 3001)
-cd api && npm ci && npm run dev
+npm run dev -w pipeline-radar-api
 
 # Frontend (port 5173, proxies /api -> 3001)
-cd pipeline-radar && npm ci && npm run dev
+npm run dev -w pipeline-radar
 ```
 
 Open http://localhost:5173.
@@ -22,14 +26,18 @@ Open http://localhost:5173.
 ## Tests
 
 ```bash
-cd pipeline-radar && npm test   # 118 tests
-cd api && npm test              # 8 tests
+npm test                                # all three workspaces (126 tests)
+
+npm test -w @pipeline-radar/shared      # 103 tests
+npm test -w pipeline-radar              # 15 tests
+npm test -w pipeline-radar-api          # 8 tests
 ```
 
 ## Layout
 
 | Path | What |
 |---|---|
+| [shared/](shared/) | Pure trial/drug logic — imported by both the web app and the API. No DOM, no React |
 | [pipeline-radar/](pipeline-radar/) | Vite + React + TypeScript frontend |
 | [api/](api/) | Express proxy — CORS, shared TTL cache, retries |
 | [terraform/](terraform/) | Infrastructure (app layer + one-time bootstrap layer) |

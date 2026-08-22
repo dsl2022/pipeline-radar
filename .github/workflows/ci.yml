@@ -1,5 +1,8 @@
 # CI gate: runs on every PR, and is reused verbatim by deploy.yml
 # (workflow_call) so main deploys through exactly the checks PRs see.
+#
+# npm workspaces: install is always a single `npm ci` at the repo root against
+# the one root lockfile; per-package work then runs with `-w <workspace>`.
 name: ci
 
 on:
@@ -7,39 +10,49 @@ on:
   workflow_call:
 
 jobs:
-  frontend:
+  shared:
+    # The DOM-free logic both the web app and the API/agent import.
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: pipeline-radar
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: pipeline-radar/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build # tsc -b && vite build
+      - run: npm test -w @pipeline-radar/shared
+      - run: npm run build -w @pipeline-radar/shared
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint -w pipeline-radar
+      - run: npm test -w pipeline-radar
+      # Vite aliases @pipeline-radar/shared to source, so no shared build first.
+      - run: npm run build -w pipeline-radar # tsc -b && vite build
 
   api:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: api/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm test
+      - run: npm test -w pipeline-radar-api
+      # Context is the repo root: the image needs the shared workspace.
       - name: docker build (build only, no push)
-        run: docker build -t pipeline-radar-api .
+        run: docker build -f api/Dockerfile -t pipeline-radar-api .
 
   terraform-validate:
     # Catches infra errors pre-merge. fmt + validate need no AWS credentials,
@@ -52,12 +65,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: pipeline-radar/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Build frontend for bundle upload checks
-        working-directory: pipeline-radar
         run: |
           npm ci
-          npm run build
+          npm run build -w pipeline-radar
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.9.8

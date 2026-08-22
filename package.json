@@ -1,0 +1,14 @@
+{
+  "name": "pipeline-radar-root",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "api",
+    "pipeline-radar"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @pipeline-radar/shared",
+    "test": "npm test --workspaces --if-present",
+    "build": "npm run build -w @pipeline-radar/shared && npm run build -w pipeline-radar-api && npm run build -w pipeline-radar"
+  }
+}

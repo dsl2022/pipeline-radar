@@ -1,5 +1,5 @@
-import type { Trial } from './types';
-import { trialsByPhase, topSponsors } from './summarize';
+import type { Trial } from '@pipeline-radar/shared/types';
+import { trialsByPhase, topSponsors } from '@pipeline-radar/shared/summarize';
 
 // Plain CSS bars, no chart lib (ARCHITECTURE §10-D). Driven by the FILTERED set
 // so the charts always agree with the table below them.
