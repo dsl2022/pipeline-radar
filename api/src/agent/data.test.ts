@@ -65,6 +65,57 @@ describe('createTrialData', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  // The case the sequential test above misses, and the one that actually
+  // happens: the tool runner executes every tool_use block in one assistant
+  // message concurrently, so two tools asking about the same disease reach
+  // this at the same instant, before either has anything to cache.
+  it('collapses concurrent searches for the same condition into one call', async () => {
+    let resolveFetch: (r: Response) => void = () => {};
+    const fetchImpl = jest.fn(
+      () => new Promise<Response>((resolve) => { resolveFetch = resolve; }),
+    );
+    const data = createTrialData({ fetchImpl: fetchImpl as unknown as typeof fetch });
+
+    const all = Promise.all([
+      data.search('lung cancer'),
+      data.search('Lung Cancer'),
+      data.search('lung cancer'),
+    ]);
+    // Let all three reach the cache check before anything resolves.
+    await Promise.resolve();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    resolveFetch(okResponse({ studies: [study('NCT01')], totalCount: 1 }));
+    const results = await all;
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    for (const set of results) expect(set.trials[0].nctId).toBe('NCT01');
+  });
+
+  it('still separates concurrent searches for different conditions', async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(okResponse({ studies: [], totalCount: 0 }));
+    const data = createTrialData({ fetchImpl: fetchImpl as unknown as typeof fetch });
+
+    await Promise.all([data.search('lung cancer'), data.search('melanoma')]);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  // A failure shared by every concurrent caller must not become a cached
+  // failure, or one blip would poison the condition for the whole TTL.
+  it('lets every concurrent caller fail, then retries cleanly', async () => {
+    const fetchImpl = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(okResponse({ studies: [study('NCT01')], totalCount: 1 }));
+    const data = createTrialData({ fetchImpl: fetchImpl as unknown as typeof fetch });
+
+    const results = await Promise.allSettled([data.search('lung cancer'), data.search('lung cancer')]);
+    expect(results.every((r) => r.status === 'rejected')).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    // The slot is free again rather than holding a rejected promise.
+    expect((await data.search('lung cancer')).trials).toHaveLength(1);
+  });
+
   it('refetches once the entry has expired', async () => {
     let clock = 1_000;
     const fetchImpl = jest.fn().mockResolvedValue(okResponse({ studies: [], totalCount: 0 }));

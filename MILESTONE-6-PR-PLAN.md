@@ -397,6 +397,16 @@ emitted as a metric.
   if eval code under `api/` imports fixtures by package name. Fix then by adding
   an explicit `"./samples/*": "./src/samples/*"` export.
 
+- **A cache populated *after* `await` does not protect a single turn.** The
+  tool runner executes every `tool_use` block in one assistant message
+  concurrently (`BetaToolRunner` -> `Promise.all`), and parallel tool use is
+  the default. So the common case — one question, three tools, same disease —
+  has all three miss an empty cache in the same tick and each start its own
+  registry request. It *looks* cached, because a sequential repeat test passes.
+  `data.ts` now stores the in-flight Promise and joins it, deleting the entry
+  on rejection so a failure is still never cached. **Any read-through cache
+  behind a tool needs single-flight, and its test needs `Promise.all`, not
+  sequential awaits.**
 - **Jest's `moduleNameMapper` redirects the runtime require, not TypeScript's
   type resolution.** The api workspace maps `@pipeline-radar/shared/*` to
   `shared/src/*`, so tests *run* against source — but `tsc` still resolves the
