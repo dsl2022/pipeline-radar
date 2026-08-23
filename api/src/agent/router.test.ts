@@ -8,16 +8,23 @@ const SECRET = 'test-secret-do-not-use';
 const ORIGIN = 'https://app.example.com';
 
 // No upstreams: these tests must never reach the network.
-const app = (over: Partial<typeof DEFAULT_LIMITS> = {}, store?: AgentStore) =>
-  createApp([], {
+// Pinned to a minute boundary. With the real clock, Retry-After is whatever
+// is left of the current minute, so asserting on it would be flaky by the
+// second.
+const T0 = Date.UTC(2026, 7, 23, 12, 0, 0);
+
+const app = (over: Partial<typeof DEFAULT_LIMITS> = {}, store?: AgentStore) => {
+  const now = () => T0;
+  return createApp([], {
     sessionSecret: SECRET,
     allowedOrigins: [ORIGIN],
     limiter: createLimiter({
-      store: store ?? createMemoryStore(),
-      now: Date.now,
+      store: store ?? createMemoryStore(now),
+      now,
       limits: { ...DEFAULT_LIMITS, ...over },
     }),
   });
+};
 
 function validCookie(): string {
   return `${SESSION_COOKIE}=${encodeURIComponent(signSession(newSessionId(), SECRET))}`;
@@ -188,6 +195,7 @@ describe('rate limits and kill switch on the chat route', () => {
 
     const limited = await post();
     expect(limited.status).toBe(429);
+    // A full minute remains because the clock is pinned to the boundary.
     expect(limited.headers['retry-after']).toBe('60');
     expect(limited.body).toEqual({ error: 'too many requests' });
   });
@@ -201,6 +209,8 @@ describe('rate limits and kill switch on the chat route', () => {
     const res = await post();
     expect(res.status).toBe(503);
     expect(res.body).toEqual({ error: 'assistant unavailable' });
+    // 12:00 UTC, so half a day until the budget resets.
+    expect(res.headers['retry-after']).toBe(String(12 * 3600));
   });
 
   it('503s when the kill switch is off', async () => {

@@ -1,4 +1,12 @@
-import { DEFAULT_LIMITS, KILL_SWITCH_KEY, createLimiter, windowKeys } from './limits';
+import {
+  DAY_MS,
+  DEFAULT_LIMITS,
+  HOUR_MS,
+  MINUTE_MS,
+  createLimiter,
+  retryAfterSeconds,
+  windowKeys,
+} from './limits';
 import { createMemoryStore, type AgentStore } from './store';
 
 // Time is injected everywhere: no sleeps, no jest fake timers, no flakiness.
@@ -48,6 +56,7 @@ describe('rate limits', () => {
     for (let i = 0; i < 3; i++) await limiter.check('s1', '1.1.1.1');
 
     const res = await limiter.check('s1', '1.1.1.1');
+    // T0 sits exactly on a minute boundary, so a full window remains.
     expect(res).toEqual({ allowed: false, status: 429, scope: 'session-minute', retryAfter: 60 });
   });
 
@@ -101,6 +110,7 @@ describe('rate limits', () => {
       allowed: false,
       status: 503,
       scope: 'global-daily',
+      retryAfter: retryAfterSeconds(T0, DAY_MS),
     });
   });
 
@@ -176,5 +186,61 @@ describe('kill switch', () => {
     fail = true;
     c.advance(10_001);
     expect(await limiter.enabled()).toBe(false);
+  });
+});
+
+describe('retry-after', () => {
+  it('returns the remainder of the window, not its width', () => {
+    expect(retryAfterSeconds(T0 + 10_000, MINUTE_MS)).toBe(50);
+    expect(retryAfterSeconds(T0 + 5 * MINUTE_MS, HOUR_MS)).toBe(55 * 60);
+  });
+
+  it('returns the full window at a boundary', () => {
+    expect(retryAfterSeconds(T0, MINUTE_MS)).toBe(60);
+    expect(retryAfterSeconds(T0, HOUR_MS)).toBe(3600);
+  });
+
+  it('never returns zero', () => {
+    expect(retryAfterSeconds(T0 + MINUTE_MS - 1, MINUTE_MS)).toBe(1);
+  });
+
+  // The case from review: exhausting the hourly cap early in the hour and
+  // being told 600s sends the caller back into the same counter ten times.
+  it('tells an hourly-capped caller to wait out the hour, not ten minutes', async () => {
+    const c = at(T0 + 5 * MINUTE_MS);
+    const { limiter } = limiterAt(c, { sessionPerMinute: 100, sessionPerHour: 1 });
+    await limiter.check('s1', '1.1.1.1');
+
+    const res = await limiter.check('s1', '1.1.1.1');
+    expect(res.allowed).toBe(false);
+    if (!res.allowed) {
+      expect(res.scope).toBe('session-hour');
+      expect(res.retryAfter).toBe(55 * 60);
+    }
+  });
+
+  it('advertises a wait that actually clears the counter', async () => {
+    const c = at(T0 + 37_000);
+    const { limiter } = limiterAt(c, { sessionPerMinute: 1 });
+    await limiter.check('s1', '1.1.1.1');
+    const denied = await limiter.check('s1', '1.1.1.1');
+    expect(denied.allowed).toBe(false);
+    if (denied.allowed) throw new Error('unreachable');
+
+    // Waiting exactly as long as advertised must get the caller back in.
+    c.advance(denied.retryAfter! * 1000);
+    expect((await limiter.check('s1', '1.1.1.1')).allowed).toBe(true);
+  });
+
+  it('gives the daily ceiling a wait that reaches UTC midnight', async () => {
+    const c = at(T0);
+    const { limiter } = limiterAt(c, { globalPerDay: 1 });
+    await limiter.check('a', '1.1.1.1');
+    const res = await limiter.check('b', '2.2.2.2');
+    expect(res.allowed).toBe(false);
+    if (!res.allowed) {
+      expect(res.retryAfter).toBe(retryAfterSeconds(T0, DAY_MS));
+      expect(res.retryAfter).toBe(12 * 3600); // T0 is 12:00 UTC
+    }
   });
 });

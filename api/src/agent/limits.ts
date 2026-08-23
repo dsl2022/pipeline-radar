@@ -36,6 +36,22 @@ export type Decision =
   | { allowed: true }
   | { allowed: false; status: 429 | 503; scope: string; retryAfter?: number };
 
+export const MINUTE_MS = 60_000;
+export const HOUR_MS = 3_600_000;
+export const DAY_MS = 86_400_000;
+
+/**
+ * Seconds until the counter that just denied this request resets.
+ *
+ * Windows are fixed UTC buckets, not sliding, so the wait is the remainder of
+ * the current bucket - not its full width. A caller who exhausts the hourly
+ * cap five minutes past the hour waits 55 minutes; telling them 600 seconds
+ * would send them back into the same exhausted counter ten times over.
+ */
+export function retryAfterSeconds(nowMs: number, windowMs: number): number {
+  return Math.max(1, Math.ceil((windowMs - (nowMs % windowMs)) / 1000));
+}
+
 /** UTC window keys. The window is in the key, so a stale counter cannot be mistaken for a live one. */
 export function windowKeys(nowMs: number) {
   return {
@@ -101,19 +117,46 @@ export function createLimiter(deps: LimiterDeps) {
       // Global first: it is the one that protects the budget rather than a
       // single caller, and 503 tells the client this is not about them.
       if (gDay > limits.globalPerDay) {
-        return { allowed: false, status: 503, scope: 'global-daily' };
+        // Honest even though it is a long wait: the budget resets at UTC
+        // midnight and nothing the caller does brings that forward.
+        return {
+          allowed: false,
+          status: 503,
+          scope: 'global-daily',
+          retryAfter: retryAfterSeconds(t, DAY_MS),
+        };
       }
       if (sMin > limits.sessionPerMinute) {
-        return { allowed: false, status: 429, scope: 'session-minute', retryAfter: 60 };
+        return {
+          allowed: false,
+          status: 429,
+          scope: 'session-minute',
+          retryAfter: retryAfterSeconds(t, MINUTE_MS),
+        };
       }
       if (sHour > limits.sessionPerHour) {
-        return { allowed: false, status: 429, scope: 'session-hour', retryAfter: 600 };
+        return {
+          allowed: false,
+          status: 429,
+          scope: 'session-hour',
+          retryAfter: retryAfterSeconds(t, HOUR_MS),
+        };
       }
       if (iMin > limits.ipPerMinute) {
-        return { allowed: false, status: 429, scope: 'ip-minute', retryAfter: 60 };
+        return {
+          allowed: false,
+          status: 429,
+          scope: 'ip-minute',
+          retryAfter: retryAfterSeconds(t, MINUTE_MS),
+        };
       }
       if (iHour > limits.ipPerHour) {
-        return { allowed: false, status: 429, scope: 'ip-hour', retryAfter: 600 };
+        return {
+          allowed: false,
+          status: 429,
+          scope: 'ip-hour',
+          retryAfter: retryAfterSeconds(t, HOUR_MS),
+        };
       }
       return { allowed: true };
     },
