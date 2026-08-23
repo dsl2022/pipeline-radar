@@ -336,6 +336,26 @@ emitted as a metric.
   504 `Outdated Optimize Dep` for React and renders nothing. **Verify UI work by
   loading the page, not by HTTP status codes.** Playwright is installed on this
   machine — drive the real page and assert on rendered geometry.
+- **A green deploy does not mean the deploy happened.** If a container fails to
+  start, ECS's deployment circuit breaker rolls back to the previous task
+  definition and the service settles into a genuinely healthy steady state on
+  the *old* image. `terraform apply` returns 0, `aws ecs wait services-stable`
+  passes, and the site keeps serving. A broken image shipped this way through
+  three consecutive "successful" deploys. `deploy.yml` now asserts that the
+  revision it applied is the revision actually running — **do not remove that
+  step**, and do not treat stability as the signal.
+- **`docker build` succeeding does not mean the image runs.** The same broken
+  image built cleanly in CI; it only failed at container start
+  (`Cannot find module 'express'` — npm workspaces had left it in
+  `api/node_modules`, which the Dockerfile did not copy). CI now starts the
+  container and curls `/healthz`.
+- **The shape both of those share, and the one to internalise: verifying a
+  proxy for the thing is not verifying the thing.** HTTP 200 on the live URL
+  proves the site is up, not that the deploy landed. A 200 from a Vite module
+  proves the file was read, not that the page renders. A successful build
+  proves the image assembles, not that it boots. Every one of those was
+  mistaken for the real check during Milestone 6. When verifying, ask what
+  would still be true if the change had silently not applied.
 - **JSON subpaths do not resolve through the shared package's `exports` map.**
   The map is `"./*" → "./dist/*.js"`, so
   `@pipeline-radar/shared/samples/lung-cancer.json` resolves to

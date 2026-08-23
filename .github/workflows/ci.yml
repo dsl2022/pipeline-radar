@@ -51,8 +51,34 @@ jobs:
       - run: npm ci
       - run: npm test -w pipeline-radar-api
       # Context is the repo root: the image needs the shared workspace.
-      - name: docker build (build only, no push)
+      - name: docker build
         run: docker build -f api/Dockerfile -t pipeline-radar-api .
+
+      # Building is not running. A broken image built cleanly here and then
+      # died at container start with "Cannot find module 'express'" - npm
+      # workspaces had left it in api/node_modules, which the Dockerfile did
+      # not copy. It shipped through three green deploys because ECS rolled
+      # each revision back into a healthy steady state on the old image.
+      # Starting the container is the only check that would have caught it.
+      - name: Smoke the image (it must run, not just build)
+        run: |
+          docker run -d --name api-smoke -p 3001:3001 pipeline-radar-api
+          for _ in $(seq 1 20); do
+            if curl -fsS -m 2 http://localhost:3001/healthz >/dev/null 2>&1; then
+              echo "container healthy: $(curl -fsS http://localhost:3001/healthz)"
+              docker rm -f api-smoke >/dev/null
+              exit 0
+            fi
+            # Exit early if it has already crashed rather than waiting out the loop.
+            if [ "$(docker inspect -f '{{.State.Running}}' api-smoke)" != "true" ]; then
+              break
+            fi
+            sleep 1
+          done
+          echo "::error::container never served /healthz"
+          docker logs api-smoke || true
+          docker rm -f api-smoke >/dev/null || true
+          exit 1
 
   terraform-validate:
     # Catches infra errors pre-merge. fmt + validate need no AWS credentials,
