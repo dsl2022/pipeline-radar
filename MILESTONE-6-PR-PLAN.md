@@ -397,6 +397,16 @@ emitted as a metric.
   if eval code under `api/` imports fixtures by package name. Fix then by adding
   an explicit `"./samples/*": "./src/samples/*"` export.
 
+- **Jest's `moduleNameMapper` redirects the runtime require, not TypeScript's
+  type resolution.** The api workspace maps `@pipeline-radar/shared/*` to
+  `shared/src/*`, so tests *run* against source — but `tsc` still resolves the
+  types through the package's `exports` map into `shared/dist`. The moment the
+  api began importing shared, every suite that touched it failed in CI with
+  `Cannot find module '@pipeline-radar/shared/net'` while passing locally,
+  because the local tree had a `dist` left over from an earlier build. The api
+  CI job now runs `npm run build -w @pipeline-radar/shared` first.
+  **To reproduce a CI-only failure of this shape, `rm -rf shared/dist` before
+  running** — a stale build artifact is invisible local state.
 - **An OOM-killed Jest worker reads as a flaky test, not as a resource limit.**
   Adding the Anthropic SDK and zod raised per-worker memory enough that the
   default `cpus - 1` workers exhausted a 3.8 GB Docker VM. The output is
