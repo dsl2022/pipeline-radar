@@ -41,6 +41,19 @@ jobs:
 
   api:
     runs-on: ubuntu-latest
+    # The store tests run against a real DynamoDB Local rather than a mock:
+    # what they prove is server-side atomicity of ADD under concurrency, which
+    # a hand-written fake would simply assert into existence.
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+    env:
+      DDB_ENDPOINT: http://localhost:8000
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_REGION: us-east-1
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

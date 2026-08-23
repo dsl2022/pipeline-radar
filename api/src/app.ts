@@ -1,6 +1,8 @@
 import express from 'express';
 import { TtlCache } from './cache';
 import { createAgentRouter } from './agent/router';
+import { createLimiter, type Limiter } from './agent/limits';
+import { createDynamoStore, createMemoryStore } from './agent/store';
 
 // Read-only proxy for the three public APIs the frontend uses. Why it exists
 // (CICD-PLAN.md): kills CORS for good, pools openFDA's per-IP daily quota
@@ -36,6 +38,8 @@ export interface AppOptions {
   sessionSecret?: string;
   /** Origins allowed to POST to the agent. */
   allowedOrigins?: string[];
+  /** Injected by tests; production builds one from AGENT_TABLE. */
+  limiter?: Limiter;
 }
 
 export function createApp(
@@ -64,6 +68,7 @@ export function createApp(
       createAgentRouter({
         sessionSecret,
         allowedOrigins: options.allowedOrigins ?? allowedOriginsFromEnv(),
+        limiter: options.limiter ?? defaultLimiter(),
       }),
     );
   } else {
@@ -113,4 +118,19 @@ function allowedOriginsFromEnv(): string[] {
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
+}
+
+// DynamoDB in production; in-process for local dev, where there is no table
+// and no second task for the counters to be wrong across. The warning matters:
+// an in-process limiter behind two tasks would silently double every limit.
+function defaultLimiter(): Limiter {
+  const table = process.env.AGENT_TABLE;
+  if (!table) {
+    console.warn('AGENT_TABLE unset - using in-process rate limits (local dev only)');
+    return createLimiter({ store: createMemoryStore(), now: Date.now });
+  }
+  return createLimiter({
+    store: createDynamoStore(table, process.env.DDB_ENDPOINT),
+    now: Date.now,
+  });
 }
