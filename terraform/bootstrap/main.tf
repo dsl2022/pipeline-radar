@@ -228,9 +228,16 @@ data "aws_iam_policy_document" "deploy" {
   # needs to resolve its ARN to wire it into the task definition - never to
   # read the value, never to create or delete it. Reading is the task
   # execution role's job at container start, granted in the app layer.
+  # GetResourcePolicy is not optional here: the aws_secretsmanager_secret
+  # data source reads the secret's attached resource policy as one of its
+  # attributes, so a plan fails without it even though nothing in this stack
+  # uses that attribute. Both are metadata - neither returns the value.
   statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:DescribeSecret"]
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy",
+    ]
     resources = ["arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/*"]
   }
 
@@ -247,8 +254,14 @@ data "aws_iam_policy_document" "deploy" {
     effect = "Allow"
     actions = [
       "iam:GetRole", "iam:CreateRole", "iam:DeleteRole", "iam:TagRole",
+      "iam:ListRoleTags", "iam:UpdateAssumeRolePolicy",
       "iam:AttachRolePolicy", "iam:DetachRolePolicy",
-      "iam:PutRolePolicy", "iam:DeleteRolePolicy",
+      # GetRolePolicy completes the inline-policy lifecycle alongside
+      # Put/Delete/List. It was not needed until Milestone 6 because every
+      # earlier role used managed-policy attachments; the agent's task role
+      # and the execution role's secret grant are the first inline policies,
+      # and Terraform reads one back after writing it.
+      "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:DeleteRolePolicy",
       "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
       "iam:CreateServiceLinkedRole",
     ]
