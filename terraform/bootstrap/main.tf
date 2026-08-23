@@ -208,6 +208,45 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.project}-*"]
   }
 
+  # WAF for the agent endpoint. Scoped to this project's web ACLs; the
+  # managed-rule-group read has no resource dimension because the groups are
+  # AWS-owned and live outside this account.
+  statement {
+    effect = "Allow"
+    actions = [
+      "wafv2:CreateWebACL", "wafv2:DeleteWebACL", "wafv2:UpdateWebACL",
+      "wafv2:GetWebACL", "wafv2:TagResource", "wafv2:UntagResource",
+      "wafv2:ListTagsForResource",
+      "wafv2:AssociateWebACL", "wafv2:DisassociateWebACL",
+      "wafv2:GetWebACLForResource",
+    ]
+    resources = [
+      "arn:${data.aws_partition.current.partition}:wafv2:*:${data.aws_caller_identity.current.account_id}:global/webacl/${var.project}-*/*",
+    ]
+  }
+
+  # Referencing an AWS-managed rule group makes CreateWebACL and UpdateWebACL
+  # evaluate against the managed rule set's own ARN as well as the web ACL's -
+  # which the first AccessDenied does not reveal, because it names only the
+  # resource it happened to check first.
+  statement {
+    effect  = "Allow"
+    actions = ["wafv2:CreateWebACL", "wafv2:UpdateWebACL"]
+    resources = [
+      "arn:${data.aws_partition.current.partition}:wafv2:*:${data.aws_caller_identity.current.account_id}:global/managedruleset/*/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "wafv2:ListWebACLs",
+      "wafv2:ListAvailableManagedRuleGroups",
+      "wafv2:DescribeManagedRuleGroup",
+    ]
+    resources = ["*"]
+  }
+
   # Milestone 6 adds a DynamoDB table for the agent's shared rate-limit
   # counters and its kill-switch flag (MILESTONE-6-PLAN.md 6.3). Scoped to
   # this project's tables. The GetItem/PutItem/DeleteItem above are a
