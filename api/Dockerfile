@@ -18,14 +18,21 @@ COPY shared ./shared
 COPY api ./api
 RUN npm run build -w @pipeline-radar/shared \
  && npm run build -w pipeline-radar-api \
- && npm prune --omit=dev
+ && npm prune --omit=dev \
+ && mkdir -p api/node_modules shared/node_modules
 
 FROM node:22-alpine
 ENV NODE_ENV=production PORT=3001
 WORKDIR /app
-# node_modules carries the workspace symlink @pipeline-radar/shared -> ../shared,
-# so shared/dist and shared/package.json must both land in the runtime image.
+# npm workspaces does NOT hoist everything: express resolves from
+# api/node_modules, not the root. Copying only the root produced an image that
+# built fine and then died at startup with "Cannot find module 'express'" -
+# invisible to CI, which builds the image but never runs it. The mkdir in the
+# build stage guarantees these paths exist even when a workspace has no
+# unhoisted deps, so COPY cannot fail.
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/api/node_modules ./api/node_modules
+COPY --from=build /app/shared/node_modules ./shared/node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/shared/package.json ./shared/package.json
 COPY --from=build /app/shared/dist ./shared/dist

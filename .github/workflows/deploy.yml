@@ -90,6 +90,33 @@ jobs:
         working-directory: terraform
         run: terraform apply -input=false -auto-approve tfplan
 
+      # terraform apply returning 0 does NOT mean the new image is running.
+      # If the container fails to start, ECS's deployment circuit breaker
+      # rolls back to the previous task definition and the service settles
+      # into a perfectly healthy steady state on the OLD image - so both
+      # "apply succeeded" and "services-stable" pass while the deploy has
+      # silently not happened. This caught a broken image that shipped
+      # undetected: the workspace Dockerfile omitted api/node_modules and
+      # every task died with "Cannot find module 'express'".
+      - name: Verify the new revision is actually running
+        working-directory: terraform
+        run: |
+          EXPECTED="$(terraform output -raw task_definition_arn)"
+          aws ecs wait services-stable \
+            --cluster "${PROJECT}-cluster" --services "${PROJECT}-api"
+          ACTUAL="$(aws ecs describe-services \
+            --cluster "${PROJECT}-cluster" --services "${PROJECT}-api" \
+            --query 'services[0].taskDefinition' --output text)"
+          echo "expected: $EXPECTED"
+          echo "running:  $ACTUAL"
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::ECS rolled back - the deployed revision is not running."
+            aws ecs describe-services --cluster "${PROJECT}-cluster" \
+              --services "${PROJECT}-api" \
+              --query 'services[0].events[0:5].message' --output text
+            exit 1
+          fi
+
       # S3 objects change without the distribution knowing; CDK's
       # BucketDeployment did this implicitly.
       - name: Invalidate CloudFront
