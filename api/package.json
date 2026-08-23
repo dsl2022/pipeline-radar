@@ -9,8 +9,10 @@
     "test": "jest"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "@pipeline-radar/shared": "*"
+    "@aws-sdk/client-dynamodb": "^3.1116.0",
+    "@aws-sdk/lib-dynamodb": "^3.1116.0",
+    "@pipeline-radar/shared": "*",
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

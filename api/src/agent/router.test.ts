@@ -1,12 +1,30 @@
 import request from 'supertest';
 import { createApp } from '../app';
+import { createLimiter, DEFAULT_LIMITS } from './limits';
+import { createMemoryStore, type AgentStore } from './store';
 import { SESSION_COOKIE, newSessionId, signSession } from './session';
 
 const SECRET = 'test-secret-do-not-use';
 const ORIGIN = 'https://app.example.com';
 
 // No upstreams: these tests must never reach the network.
-const app = () => createApp([], { sessionSecret: SECRET, allowedOrigins: [ORIGIN] });
+// Pinned to a minute boundary. With the real clock, Retry-After is whatever
+// is left of the current minute, so asserting on it would be flaky by the
+// second.
+const T0 = Date.UTC(2026, 7, 23, 12, 0, 0);
+
+const app = (over: Partial<typeof DEFAULT_LIMITS> = {}, store?: AgentStore) => {
+  const now = () => T0;
+  return createApp([], {
+    sessionSecret: SECRET,
+    allowedOrigins: [ORIGIN],
+    limiter: createLimiter({
+      store: store ?? createMemoryStore(now),
+      now,
+      limits: { ...DEFAULT_LIMITS, ...over },
+    }),
+  });
+};
 
 function validCookie(): string {
   return `${SESSION_COOKIE}=${encodeURIComponent(signSession(newSessionId(), SECRET))}`;
@@ -162,5 +180,76 @@ describe('trust proxy', () => {
       .set('X-Forwarded-For', '203.0.113.9, 70.41.3.18, 150.172.238.178');
 
     expect(res.body.ip).toBe('70.41.3.18');
+  });
+});
+
+describe('rate limits and kill switch on the chat route', () => {
+  it('429s past the per-session cap, with Retry-After', async () => {
+    const a = app({ sessionPerMinute: 2 });
+    const cookie = validCookie();
+    const post = () =>
+      request(a).post('/api/agent/chat').set('Cookie', cookie).set('Origin', ORIGIN).send({ message: 'hi' });
+
+    expect((await post()).status).toBe(200);
+    expect((await post()).status).toBe(200);
+
+    const limited = await post();
+    expect(limited.status).toBe(429);
+    // A full minute remains because the clock is pinned to the boundary.
+    expect(limited.headers['retry-after']).toBe('60');
+    expect(limited.body).toEqual({ error: 'too many requests' });
+  });
+
+  it('503s when the global daily ceiling is crossed', async () => {
+    const a = app({ globalPerDay: 1 });
+    const post = () =>
+      request(a).post('/api/agent/chat').set('Cookie', validCookie()).set('Origin', ORIGIN).send({ message: 'hi' });
+
+    expect((await post()).status).toBe(200);
+    const res = await post();
+    expect(res.status).toBe(503);
+    expect(res.body).toEqual({ error: 'assistant unavailable' });
+    // 12:00 UTC, so half a day until the budget resets.
+    expect(res.headers['retry-after']).toBe(String(12 * 3600));
+  });
+
+  it('503s when the kill switch is off', async () => {
+    const off: AgentStore = { bump: async () => 1, getFlag: async () => false };
+    const res = await request(app({}, off))
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({ message: 'hi' });
+    expect(res.status).toBe(503);
+  });
+
+  // The limiter is what stands between an anonymous endpoint and the bill.
+  it('refuses rather than serving unmetered when the store is unreachable', async () => {
+    const broken: AgentStore = {
+      bump: async () => {
+        throw new Error('ddb unreachable');
+      },
+      getFlag: async () => null,
+    };
+    const res = await request(app({}, broken))
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({ message: 'hi' });
+    expect(res.status).toBe(503);
+  });
+
+  // Cheap checks run first so junk never costs a DynamoDB write, and a
+  // rejected request does not consume the caller's allowance.
+  it('does not count a request that failed an earlier gate', async () => {
+    let bumps = 0;
+    const counting: AgentStore = {
+      bump: async () => ++bumps,
+      getFlag: async () => null,
+    };
+    const a = app({}, counting);
+    await request(a).post('/api/agent/chat').set('Origin', ORIGIN).send({ message: 'hi' }); // no cookie
+    await request(a).post('/api/agent/chat').set('Cookie', validCookie()).set('Origin', ORIGIN).send({ message: '' });
+    expect(bumps).toBe(0);
   });
 });
