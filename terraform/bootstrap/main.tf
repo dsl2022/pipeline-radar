@@ -228,17 +228,39 @@ data "aws_iam_policy_document" "deploy" {
   # needs to resolve its ARN to wire it into the task definition - never to
   # read the value, never to create or delete it. Reading is the task
   # execution role's job at container start, granted in the app layer.
-  # GetResourcePolicy is not optional here: the aws_secretsmanager_secret
-  # data source reads the secret's attached resource policy as one of its
-  # attributes, so a plan fails without it even though nothing in this stack
-  # uses that attribute. Both are metadata - neither returns the value.
+  # Two secrets, two very different levels of access, scoped per secret rather
+  # than across the whole project prefix.
+  #
+  # The session signing key is generated and owned by Terraform, so CI needs
+  # its full lifecycle including reading the value back to detect drift.
+  # Losing it is harmless: it only invalidates anonymous rate-limiting
+  # cookies.
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:CreateSecret", "secretsmanager:DeleteSecret",
+      "secretsmanager:UpdateSecret", "secretsmanager:PutSecretValue",
+      "secretsmanager:GetSecretValue", "secretsmanager:ListSecretVersionIds",
+      "secretsmanager:TagResource", "secretsmanager:UntagResource",
+      "secretsmanager:DescribeSecret", "secretsmanager:GetResourcePolicy",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/session-secret-*"]
+  }
+
+  # The Anthropic key is created and rotated by hand and stays read-only to
+  # CI: enough metadata to resolve its ARN for the task definition, never
+  # GetSecretValue. Reading it is the task execution role's job at container
+  # start. GetResourcePolicy is not optional - the
+  # aws_secretsmanager_secret data source reads the attached resource policy
+  # as one of its attributes, so a plan fails without it even though nothing
+  # here uses that attribute. Both actions return metadata, not the value.
   statement {
     effect = "Allow"
     actions = [
       "secretsmanager:DescribeSecret",
       "secretsmanager:GetResourcePolicy",
     ]
-    resources = ["arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/anthropic-api-key-*"]
   }
 
   # ListSecrets has no resource dimension, so it cannot be scoped. It returns
