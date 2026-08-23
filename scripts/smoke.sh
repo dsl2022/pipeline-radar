@@ -24,18 +24,48 @@ check() { # name expected actual
   [ "$2" = "$3" ] && pass "$1" || fail "$1" "$2" "$3"
 }
 
-# The kill-switch assertions disable the agent in production. If this script
-# dies between flipping and restoring, the agent stays down - so restore on
-# any exit, not just the happy path.
+# The kill-switch assertions disable the agent in production, so the original
+# state has to be captured and put back - not assumed. An operator may have
+# deliberately disabled the agent before this ran, and a smoke test that
+# re-enables it would silently undo an incident response.
+#
+# The AWS CLI renders a DynamoDB BOOL as Python does: "True"/"False", and
+# "None" when the item is absent. Normalise to JSON before writing it back.
+ORIGINAL_FLAG=""   # "" = absent, otherwise "true" / "false"
+
+capture_flag() {
+  local raw
+  raw="$(aws dynamodb get-item --table-name "$TABLE" --key "$FLAG_KEY" \
+    --query 'Item.value.BOOL' --output text 2>/dev/null | tr -d '\r')"
+  case "$raw" in
+    True)  ORIGINAL_FLAG="true" ;;
+    False) ORIGINAL_FLAG="false" ;;
+    *)     ORIGINAL_FLAG="" ;;
+  esac
+}
+
+# Restore on any exit, not just the happy path: dying between the flip and the
+# restore would leave the agent down.
 restore_flag() {
-  aws dynamodb delete-item --table-name "$TABLE" --key "$FLAG_KEY" >/dev/null 2>&1 || true
+  if [ -z "$ORIGINAL_FLAG" ]; then
+    aws dynamodb delete-item --table-name "$TABLE" --key "$FLAG_KEY" >/dev/null 2>&1 || true
+  else
+    aws dynamodb put-item --table-name "$TABLE" \
+      --item "{\"pk\":{\"S\":\"flag#agent_enabled\"},\"value\":{\"BOOL\":$ORIGINAL_FLAG}}" \
+      >/dev/null 2>&1 || true
+  fi
 }
 trap restore_flag EXIT
+capture_flag
 
 code() { curl -s -m 45 -o /tmp/smoke.body -w '%{http_code}' "$@"; }
+# tr -d '\r' is not redundant: headers arrive CRLF-terminated, and the cut
+# below only happens to drop the CR because the cookie always carries
+# attributes after it. Remove Path or SameSite and the CR would ride along
+# into a request header, failing in a way that looks like anything but this.
 new_session() {
   curl -s -m 45 -D - -o /dev/null "$BASE/api/agent/session" \
-    | grep -i '^set-cookie' | sed 's/^[Ss]et-[Cc]ookie: //' | cut -d';' -f1
+    | grep -i '^set-cookie' | tr -d '\r' | sed 's/^[Ss]et-[Cc]ookie: //' | cut -d';' -f1
 }
 chat() { # cookie
   code -X POST -H 'content-type: application/json' -H "Cookie: $1" \
@@ -60,6 +90,19 @@ grep -q '<!doctype html' /tmp/smoke.body 2>/dev/null \
 # Write methods reach the origin at all: the read-only proxy's own 405 is the
 # proof, and needs no endpoint that does not exist yet.
 check "POST reaches the origin"         405 "$(code -X POST "$BASE/api/ctgov/v2/studies")"
+
+# An operator may have disabled the agent on purpose. Assertions that need it
+# running cannot pass, and failing the deploy over a deliberate action would be
+# wrong - so say so loudly and skip them. The app-level checks above still ran.
+if [ "$ORIGINAL_FLAG" = "false" ]; then
+  echo
+  echo "  NOTE  agent is disabled by the kill switch - skipping agent assertions"
+  echo "        (the flag was already false before this run; it will be left that way)"
+  echo
+  [ "$fails" -gt 0 ] && { echo "::error::smoke suite failed ($fails assertion(s))"; exit 1; }
+  echo "smoke suite passed (agent assertions skipped)"
+  exit 0
+fi
 
 # --- session gate ------------------------------------------------------------
 COOKIE="$(new_session)"
