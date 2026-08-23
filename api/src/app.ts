@@ -1,5 +1,6 @@
 import express from 'express';
 import { TtlCache } from './cache';
+import { createAgentRouter } from './agent/router';
 
 // Read-only proxy for the three public APIs the frontend uses. Why it exists
 // (CICD-PLAN.md): kills CORS for good, pools openFDA's per-IP daily quota
@@ -30,13 +31,44 @@ export const UPSTREAMS: Upstream[] = [
 const UPSTREAM_TIMEOUT_MS = 15_000;
 const CACHEABLE_STATUSES = new Set([200, 404]);
 
-export function createApp(upstreams: Upstream[] = UPSTREAMS): express.Express {
+export interface AppOptions {
+  /** Shared HMAC key for session cookies. Absent = agent routes are not mounted. */
+  sessionSecret?: string;
+  /** Origins allowed to POST to the agent. */
+  allowedOrigins?: string[];
+}
+
+export function createApp(
+  upstreams: Upstream[] = UPSTREAMS,
+  options: AppOptions = {},
+): express.Express {
   const app = express();
   app.disable('x-powered-by');
+
+  // Two proxies sit in front of this: CloudFront, then the ALB. Without this
+  // req.ip is the ALB's address, so every request looks like one client and
+  // any per-IP limit would throttle all users as a single bucket.
+  app.set('trust proxy', 2);
 
   app.get('/healthz', (_req, res) => {
     res.json({ ok: true });
   });
+
+  // Mounted only when a signing key is configured. Failing closed matters:
+  // without a shared secret across tasks the cookie gate is meaningless, and
+  // a meaningless gate in front of a spend endpoint is worse than no endpoint.
+  const sessionSecret = options.sessionSecret ?? process.env.SESSION_SECRET;
+  if (sessionSecret) {
+    app.use(
+      '/api/agent',
+      createAgentRouter({
+        sessionSecret,
+        allowedOrigins: options.allowedOrigins ?? allowedOriginsFromEnv(),
+      }),
+    );
+  } else {
+    console.warn('SESSION_SECRET unset - agent routes not mounted');
+  }
 
   for (const { prefix, target, ttlMs } of upstreams) {
     const cache = new TtlCache();
@@ -74,4 +106,11 @@ export function createApp(upstreams: Upstream[] = UPSTREAMS): express.Express {
   }
 
   return app;
+}
+
+function allowedOriginsFromEnv(): string[] {
+  return (process.env.APP_ORIGIN ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
 }

@@ -62,9 +62,12 @@ data "aws_secretsmanager_secret" "anthropic" {
 # permission to read Secrets Manager itself.
 data "aws_iam_policy_document" "execution_secrets" {
   statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = [data.aws_secretsmanager_secret.anthropic.arn]
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      data.aws_secretsmanager_secret.anthropic.arn,
+      aws_secretsmanager_secret.session.arn,
+    ]
   }
 }
 
@@ -103,4 +106,31 @@ resource "aws_iam_role_policy" "task" {
 output "agent_table_name" {
   value       = aws_dynamodb_table.agent.name
   description = "Rate-limit counters and the kill-switch flag"
+}
+
+# --- Session signing key ------------------------------------------------------
+# The cookie gate is only meaningful if every task validates against the same
+# key: desired_count is 2, so a per-process secret would mean a cookie minted
+# by one task is rejected by the other.
+#
+# Generated here rather than by hand because, unlike the Anthropic key, this
+# has no value outside the deployment and rotating it costs nothing - it
+# invalidates anonymous sessions, which are a rate-limiting handle, not a
+# login. The trade-off is that the value lands in Terraform state; that state
+# lives in a private, encrypted, versioned bucket and already contains enough
+# to compromise the stack.
+resource "random_password" "session" {
+  length  = 48
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "session" {
+  name                    = "${var.project}/session-secret"
+  description             = "HMAC key for anonymous agent session cookies"
+  recovery_window_in_days = 0 # a regenerated key is not worth recovering
+}
+
+resource "aws_secretsmanager_secret_version" "session" {
+  secret_id     = aws_secretsmanager_secret.session.id
+  secret_string = random_password.session.result
 }
