@@ -63,9 +63,11 @@ resource "aws_lb_target_group" "api" {
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
-  # SSE connections are long-lived, so a deploy that drains in 10s cuts
-  # conversations in flight. One turn is bounded at 120s.
-  deregistration_delay = 60
+  # Must exceed the maximum chat turn (120s), not merely beat the old 10s
+  # default. During a deploy the target drains for exactly this long before
+  # ECS stops the container; anything under the turn bound cuts an in-flight
+  # SSE stream at that mark. 120 + 30s margin.
+  deregistration_delay = 150
 
   health_check {
     path                = "/healthz"

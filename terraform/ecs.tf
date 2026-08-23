@@ -59,6 +59,12 @@ resource "aws_ecs_task_definition" "api" {
     image        = local.image
     essential    = true
     portMappings = [{ containerPort = 3001, protocol = "tcp" }]
+
+    # Draining (deregistration_delay, 150s) happens first; this is the window
+    # the container gets after SIGTERM to close any stream that survived it.
+    # Defaults to 30s, which would SIGKILL mid-turn. 120s is the Fargate
+    # maximum and matches the turn bound.
+    stopTimeout = 120
     logConfiguration = {
       logDriver = "awslogs"
       options = {
