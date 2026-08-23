@@ -14,11 +14,11 @@ import {
   statsLine,
   trialRowCells,
   type ReportMeta,
-} from './report';
+} from '@pipeline-radar/shared/report';
 import { winAnsiSafe } from './pdfText';
-import type { Trial } from './types';
-import type { Landscape } from './drugs/cluster';
-import type { FdaBadge } from './drugs/openfda';
+import type { Trial } from '@pipeline-radar/shared/types';
+import type { Landscape } from '@pipeline-radar/shared/drugs/cluster';
+import type { FdaBadge } from '@pipeline-radar/shared/drugs/openfda';
 
 // PDF renderer for the consultant deliverable — a real .pdf file download, not
 // the print dialog. Kept out of report.ts so the pure text renderers stay

@@ -1,6 +1,6 @@
-import type { Trial } from './types';
-import { formatPhases, formatStatus } from './mapStudy';
-import type { SortKey, SortDir } from './summarize';
+import type { Trial } from '@pipeline-radar/shared/types';
+import { formatPhases, formatStatus } from '@pipeline-radar/shared/mapStudy';
+import type { SortKey, SortDir } from '@pipeline-radar/shared/summarize';
 
 export interface SortState {
   key: SortKey;

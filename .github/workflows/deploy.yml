@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: pipeline-radar/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - uses: hashicorp/setup-terraform@v4
         with:
@@ -62,17 +62,19 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
         id: ecr
 
+      # Context is the repo root, not api/: the image needs the shared
+      # workspace (@pipeline-radar/shared) that the service imports.
       - name: Build and push API image
-        working-directory: api
         run: |
           IMAGE="${{ steps.ecr.outputs.registry }}/${PROJECT}-api:${GITHUB_SHA}"
-          docker build --platform linux/amd64 -t "$IMAGE" .
+          docker build --platform linux/amd64 -f api/Dockerfile -t "$IMAGE" .
           docker push "$IMAGE"
 
       # web.tf uploads dist/ to S3, so the build must happen before apply.
       - name: Build frontend
-        working-directory: pipeline-radar
-        run: npm ci && npm run build
+        run: |
+          npm ci
+          npm run build -w pipeline-radar
 
       - name: Terraform init
         working-directory: terraform

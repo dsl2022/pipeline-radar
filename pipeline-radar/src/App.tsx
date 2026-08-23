@@ -4,11 +4,11 @@ import { TrialsTable, type SortState } from './TrialsTable';
 import { FiltersBar, type FilterOption } from './FiltersBar';
 import { SummaryPanel } from './SummaryPanel';
 import { DrugTable } from './DrugTable';
-import { buildDrugLandscape } from './drugs/cluster';
-import { enrichTopRows } from './drugs/rxnorm';
-import { badgeDrugs, fdaStatusOf, type FdaBadge } from './drugs/openfda';
-import { filterTrials, sortTrials, mergeTrials, trialsByPhase, PHASE_LABELS, type SortKey } from './summarize';
-import { formatStatus } from './mapStudy';
+import { buildDrugLandscape } from '@pipeline-radar/shared/drugs/cluster';
+import { enrichTopRows } from '@pipeline-radar/shared/drugs/rxnorm';
+import { badgeDrugs, fdaStatusOf, type FdaBadge } from '@pipeline-radar/shared/drugs/openfda';
+import { filterTrials, sortTrials, mergeTrials, trialsByPhase, PHASE_LABELS, type SortKey } from '@pipeline-radar/shared/summarize';
+import { formatStatus } from '@pipeline-radar/shared/mapStudy';
 import {
   buildHtmlReport,
   buildMarkdownReport,
@@ -16,11 +16,11 @@ import {
   buildTrialsMarkdownReport,
   reportFilenameFor,
   type ReportMeta,
-} from './report';
-import { diffSnapshots, loadSnapshot, makeSnapshot, saveSnapshot, type Snapshot } from './watchlist';
+} from '@pipeline-radar/shared/report';
+import { diffSnapshots, loadSnapshot, makeSnapshot, saveSnapshot, type Snapshot } from '@pipeline-radar/shared/watchlist';
 import { ExportBar } from './ExportBar';
 import { WatchlistDiff } from './WatchlistDiff';
-import type { Trial } from './types';
+import type { Trial } from '@pipeline-radar/shared/types';
 import './App.css';
 
 // §5's page cap, re-denominated in TRIALS now that pages are 500 (M3 step 4);

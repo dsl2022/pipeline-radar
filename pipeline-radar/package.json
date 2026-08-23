@@ -14,7 +14,8 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "@pipeline-radar/shared": "*"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

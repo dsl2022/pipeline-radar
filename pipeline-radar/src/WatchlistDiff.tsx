@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { LandscapeDiff, Snapshot } from './watchlist';
+import type { LandscapeDiff, Snapshot } from '@pipeline-radar/shared/watchlist';
 
 // Milestone 5: "what changed since last time" panel. Renders ONLY inside the
 // drugs view — FDA badges stream only while that view is open, so anywhere else

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
-import type { DrugRow } from './drugs/cluster';
-import { canon } from './drugs/canon';
-import { fetchTopReactions, type FdaBadge, type Reaction } from './drugs/openfda';
+import type { DrugRow } from '@pipeline-radar/shared/drugs/cluster';
+import { canon } from '@pipeline-radar/shared/drugs/canon';
+import { fetchTopReactions, type FdaBadge, type Reaction } from '@pipeline-radar/shared/drugs/openfda';
 
 // One drug, one row (milestone 3) + FDA approval badges and an expandable
 // detail row (milestone 4). Rows render instantly from local clustering; the

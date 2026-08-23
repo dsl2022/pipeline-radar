@@ -1,8 +1,8 @@
 import { buildPdfReport, buildTrialsPdfReport } from './pdfReport';
-import type { Landscape, DrugRow } from './drugs/cluster';
-import type { FdaBadge } from './drugs/openfda';
-import type { ReportMeta } from './report';
-import type { Trial } from './types';
+import type { Landscape, DrugRow } from '@pipeline-radar/shared/drugs/cluster';
+import type { FdaBadge } from '@pipeline-radar/shared/drugs/openfda';
+import type { ReportMeta } from '@pipeline-radar/shared/report';
+import type { Trial } from '@pipeline-radar/shared/types';
 
 // Smoke-level only: the cell text and scope rules are unit-tested in
 // report.test.ts against the shared helpers; here we prove jspdf actually
