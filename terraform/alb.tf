@@ -50,6 +50,10 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
+
+  # Default is 60s, which would drop a chat stream mid-turn: the agent's
+  # per-turn budget is 120s. Sized above that with margin.
+  idle_timeout = 240
 }
 
 resource "aws_lb_target_group" "api" {
@@ -59,7 +63,11 @@ resource "aws_lb_target_group" "api" {
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
-  deregistration_delay = 10
+  # Must exceed the maximum chat turn (120s), not merely beat the old 10s
+  # default. During a deploy the target drains for exactly this long before
+  # ECS stops the container; anything under the turn bound cuts an in-flight
+  # SSE stream at that mark. 120 + 30s margin.
+  deregistration_delay = 150
 
   health_check {
     path                = "/healthz"
