@@ -1,4 +1,4 @@
-import { brandishAliases, clearRxnormCache, resolveDrugRow, resolveRxcui } from './rxnorm';
+import { brandishAliases, clearRxnormCache, enrichTopRows, resolveDrugRow, resolveRxcui } from './rxnorm';
 import type { DrugRow } from './cluster';
 
 function mockFetch(bodyByUrl: (url: string) => unknown) {
@@ -73,5 +73,59 @@ describe('resolveDrugRow', () => {
   it('returns null when every candidate definitively misses', async () => {
     mockFetch(() => ({ idGroup: {} }));
     await expect(resolveDrugRow(drugRow('BMS-986340'))).resolves.toBeNull();
+  });
+});
+
+// enrichTopRows runs four workers in parallel and two rows routinely resolve to
+// the same alias, so concurrent same-name misses happen on an ordinary page
+// load - not only under the agent. The cache never covered this, because it is
+// written after the fetch resolves.
+describe('concurrent resolution collapses into one request', () => {
+  it('queries once for concurrent callers asking the same name', async () => {
+    const spy = mockFetch(() => ({ idGroup: { rxnormId: ['1547545'] } }));
+
+    const results = await Promise.all([
+      resolveRxcui('pembrolizumab'),
+      resolveRxcui('pembrolizumab'),
+      resolveRxcui('pembrolizumab'),
+    ]);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(results).toEqual(['1547545', '1547545', '1547545']);
+  });
+
+  it('still queries separately for different names', async () => {
+    const spy = mockFetch(() => ({ idGroup: { rxnormId: ['1'] } }));
+    await Promise.all([resolveRxcui('pembrolizumab'), resolveRxcui('osimertinib')]);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  // The real path: four workers, rows sharing a name.
+  it('queries once per distinct name across enrichTopRows workers', async () => {
+    const spy = mockFetch(() => ({ idGroup: { rxnormId: ['1547545'] } }));
+    const rows = Array.from({ length: 8 }, (_, i) => drugRow(`Pembrolizumab`, [`alias${i}`]));
+
+    const seen = new Map<string, string | null>();
+    await enrichTopRows(rows, (key, cui) => seen.set(key, cui));
+
+    // Eight rows, one distinct canon name, one request.
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(seen.get('pembrolizumab')).toBe('1547545');
+  });
+
+  it('fails every concurrent caller, then retries cleanly', async () => {
+    let call = 0;
+    jest.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+      const failing = call++ === 0;
+      return {
+        ok: !failing,
+        status: failing ? 500 : 200,
+        json: async () => ({ idGroup: { rxnormId: ['1547545'] } }),
+      } as Response;
+    });
+
+    const settled = await Promise.allSettled([resolveRxcui('pembrolizumab'), resolveRxcui('pembrolizumab')]);
+    expect(settled.every((r) => r.status === 'rejected')).toBe(true);
+    expect(await resolveRxcui('pembrolizumab')).toBe('1547545');
   });
 });
