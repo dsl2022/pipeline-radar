@@ -1,3 +1,4 @@
+import { ClampCell } from './ClampCell';
 import type { Trial } from '@pipeline-radar/shared/types';
 import { formatPhases, formatStatus } from '@pipeline-radar/shared/mapStudy';
 import type { SortKey, SortDir } from '@pipeline-radar/shared/summarize';
@@ -57,9 +58,15 @@ export function TrialsTable({
                 {t.nctId}
               </a>
             </td>
-            <td className="title">{t.title}</td>
-            <td>{t.interventions.map((i) => i.name).join(', ') || '—'}</td>
-            <td>{t.sponsor}</td>
+            <td className="title">
+              <ClampCell>{t.title}</ClampCell>
+            </td>
+            <td className="tested">
+              <Interventions names={t.interventions.map((i) => i.name)} />
+            </td>
+            <td>
+              <ClampCell>{t.sponsor}</ClampCell>
+            </td>
             <td>{formatPhases(t.phases)}</td>
             <td>
               <span className={`status status-${t.status.toLowerCase()}`}>{formatStatus(t.status)}</span>
@@ -70,4 +77,20 @@ export function TrialsTable({
       </tbody>
     </table>
   );
+}
+
+/**
+ * Registry entries repeat intervention names across arms (REMAP-CAP lists
+ * "Tocilizumab" twice), so dedupe first -- otherwise the count overstates what
+ * is actually being tested.
+ *
+ * The label carries the total rather than a hidden count: clamping is by
+ * height, so how many names are visible depends on the column width, and any
+ * fixed "+38 more" would be wrong at some viewport. "Show all 42" is true at
+ * every width.
+ */
+function Interventions({ names }: { names: string[] }) {
+  const unique = [...new Set(names.filter(Boolean))];
+  if (unique.length === 0) return <>—</>;
+  return <ClampCell label={`Show all ${unique.length}`}>{unique.join(', ')}</ClampCell>;
 }
