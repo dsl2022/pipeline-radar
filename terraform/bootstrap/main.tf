@@ -208,6 +208,41 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.project}-*"]
   }
 
+  # Milestone 6 adds a DynamoDB table for the agent's shared rate-limit
+  # counters and its kill-switch flag (MILESTONE-6-PLAN.md 6.3). Scoped to
+  # this project's tables. The GetItem/PutItem/DeleteItem above are a
+  # different thing entirely - they are the S3 backend's state lock.
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:DescribeTable",
+      "dynamodb:UpdateTable", "dynamodb:TagResource", "dynamodb:UntagResource",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:DescribeTimeToLive", "dynamodb:UpdateTimeToLive",
+      "dynamodb:DescribeContinuousBackups", "dynamodb:UpdateContinuousBackups",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:dynamodb:*:${data.aws_caller_identity.current.account_id}:table/${var.project}-*"]
+  }
+
+  # The Anthropic API key is created and rotated by hand, out of band. CI only
+  # needs to resolve its ARN to wire it into the task definition - never to
+  # read the value, never to create or delete it. Reading is the task
+  # execution role's job at container start, granted in the app layer.
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:DescribeSecret"]
+    resources = ["arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/*"]
+  }
+
+  # ListSecrets has no resource dimension, so it cannot be scoped. It returns
+  # metadata only (names and ARNs, never values) and some provider versions
+  # need it to resolve a secret by name.
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:ListSecrets"]
+    resources = ["*"]
+  }
+
   statement {
     effect = "Allow"
     actions = [
