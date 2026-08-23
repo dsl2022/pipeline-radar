@@ -36,7 +36,9 @@ memory of the conversation that produced it.
 | Milestones 1–5 | Shipped. App is live and deployed. |
 | `shared/` workspace extraction | **Merged** (PR #1). Required a follow-up commit restoring 66 cross-platform optional bindings to the lockfile — see Traps below. |
 | Test baseline | **126** — 103 `shared` + 15 `pipeline-radar` + 8 `pipeline-radar-api` |
-| Agent code | None yet. `api/src/` is `app.ts`, `cache.ts`, `server.ts`. |
+| Blueprint PRs 1-6 | **Merged and verified in production.** Request pipeline, rate limits, kill switch, smoke suite and WAF are all live. |
+| Anthropic spend | **Zero.** The key is wired into the task; nothing reads it yet. |
+| Agent code | `api/src/agent/` holds the gates and limiter. No model call exists. |
 
 ---
 
@@ -313,11 +315,22 @@ emitted as a metric.
   jest and not watchman (watchman was reset and it made no difference). CI on
   Linux is unaffected. **Verify locally by invoking the tool directly or by
   checking the artifacts it produced — do not trust `$?` from `npm run`.**
-- **`npm install` / `npm ci` fail intermittently here**, with no error text at
-  all — just "A complete log of this run can be found in…" and a log that stops
-  mid-resolve. Retrying usually works. Do not conclude the lockfile is broken
-  from a single failure; that mistake cost this project a wiped `node_modules`
-  and a dead dev server (see below).
+- **`npm install` cannot reliably complete on this Mac.** It dies mid-resolve
+  with no error text — just "A complete log of this run can be found in…" and a
+  log that stops partway. It is not heap (8GB makes no difference) and not
+  network (packuments fetch in ~0.1s). `npm ci` works, because it reads the
+  lockfile instead of resolving. Small additions sometimes succeed on retry;
+  the AWS SDK's tree never did, in 10+ attempts.
+  **Workaround that does work:** resolve in a Linux container —
+  `docker run --rm -v "$PWD":/w -w /w node:22-alpine npm install -w <ws> --save
+  --package-lock-only <pkg>` — then `npm ci` on the host to materialise it.
+  Running the test suites in a container (with `node_modules` in docker volumes
+  so the host tree is untouched) is also more reliable than the host, and
+  matches how CI runs.
+- **Never let a host `npm install` rewrite the lockfile.** It reconciles against
+  the existing `node_modules` and drops other platforms' optional binaries —
+  observed dropping linux bindings from 6 to 4. Copy the lockfile aside first
+  and restore it if the count changes.
 - **Docker daemon may not be running locally**, so the image build is unverified
   until CI's `api` job runs it.
 
@@ -336,6 +349,17 @@ emitted as a metric.
   504 `Outdated Optimize Dep` for React and renders nothing. **Verify UI work by
   loading the page, not by HTTP status codes.** Playwright is installed on this
   machine — drive the real page and assert on rendered geometry.
+- **A PR that introduces a new AWS service will fail its first deploy on a
+  missing bootstrap grant — check before merging, not after.** This happened
+  three times in one milestone: Secrets Manager, then DynamoDB, then WAF. The
+  deploy role is scoped per service, `terraform/bootstrap` holds **local state**
+  and is applied by hand, so the grant must be applied *before* the PR merges or
+  `main` goes red. Two further details learned the hard way: a narrowing that is
+  correct today can be invalidated by a later PR (read-only on secrets broke the
+  moment Terraform started generating one), and **an IAM denial names *a*
+  failing resource, not all of them** — granting WAF on the web ACL's ARN still
+  failed, because referencing a managed rule group evaluates against the managed
+  rule set's ARN too.
 - **A green deploy does not mean the deploy happened.** If a container fails to
   start, ECS's deployment circuit breaker rolls back to the previous task
   definition and the service settles into a genuinely healthy steady state on
@@ -349,6 +373,13 @@ emitted as a metric.
   (`Cannot find module 'express'` — npm workspaces had left it in
   `api/node_modules`, which the Dockerfile did not copy). CI now starts the
   container and curls `/healthz`.
+- **Verification mechanisms need the same scrutiny as features.** Two separate
+  reviews found bugs not in what was built but in what was built to *check* it:
+  a CloudFront rule that rewrote every API denial to `200` so the guards only
+  looked like they passed, and a smoke suite that deleted the kill-switch flag
+  on exit — silently re-enabling an agent an operator had deliberately disabled.
+  Asking "does this detect failure?" is not enough. Also ask **"what does this
+  change about the system while it runs, and what does it leave behind?"**
 - **The shape both of those share, and the one to internalise: verifying a
   proxy for the thing is not verifying the thing.** HTTP 200 on the live URL
   proves the site is up, not that the deploy landed. A 200 from a Vite module
