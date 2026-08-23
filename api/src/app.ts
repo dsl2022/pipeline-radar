@@ -1,8 +1,13 @@
+import Anthropic from '@anthropic-ai/sdk';
 import express from 'express';
+import { setApiBase } from '@pipeline-radar/shared/net';
 import { TtlCache } from './cache';
 import { createAgentRouter } from './agent/router';
 import { createLimiter, type Limiter } from './agent/limits';
 import { createDynamoStore, createMemoryStore } from './agent/store';
+import { createTrialData } from './agent/data';
+import { createTools } from './agent/tools';
+import { createAgentRunner, type AgentRunner } from './agent/runner';
 
 // Read-only proxy for the three public APIs the frontend uses. Why it exists
 // (CICD-PLAN.md): kills CORS for good, pools openFDA's per-IP daily quota
@@ -17,6 +22,13 @@ import { createDynamoStore, createMemoryStore } from './agent/store';
 // openFDA/RxNorm a miss IS the answer ("no approval record" / "not in
 // RxNorm"). Errors and 5xx are never cached. TTLs: registry data 10 min,
 // FDA/RxNorm reference data 24 h.
+
+/** One definition: server.ts binds it, and the agent's tools dial it back. */
+export const DEFAULT_PORT = 3001;
+
+export function servicePort(): number {
+  return Number(process.env.PORT ?? DEFAULT_PORT);
+}
 
 export interface Upstream {
   prefix: string;
@@ -40,6 +52,10 @@ export interface AppOptions {
   allowedOrigins?: string[];
   /** Injected by tests; production builds one from AGENT_TABLE. */
   limiter?: Limiter;
+  /** Injected by tests; production builds one from ANTHROPIC_API_KEY. */
+  runner?: AgentRunner;
+  /** Where the agent's tools send upstream requests. Defaults to this app's own proxy. */
+  selfBaseUrl?: string;
 }
 
 export function createApp(
@@ -69,6 +85,7 @@ export function createApp(
         sessionSecret,
         allowedOrigins: options.allowedOrigins ?? allowedOriginsFromEnv(),
         limiter: options.limiter ?? defaultLimiter(),
+        runner: options.runner ?? defaultRunner(options.selfBaseUrl),
       }),
     );
   } else {
@@ -118,6 +135,29 @@ function allowedOriginsFromEnv(): string[] {
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
+}
+
+/**
+ * The agent, or nothing.
+ *
+ * No key means no runner, and /chat answers 503. It deliberately does not fall
+ * back to a canned reply: a stubbed answer on a production endpoint looks
+ * exactly like a working assistant to everyone except the person who needs to
+ * know the key is missing.
+ */
+function defaultRunner(selfBaseUrl?: string): AgentRunner | undefined {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.warn('ANTHROPIC_API_KEY unset - agent chat will answer 503');
+    return undefined;
+  }
+
+  // The shared data modules were written against a browser's relative /api.
+  // Point them at this service's own proxy: it holds the TTL cache that pools
+  // openFDA's per-IP daily quota, which both tasks share behind one NAT.
+  setApiBase(selfBaseUrl ?? `http://127.0.0.1:${servicePort()}/api`);
+
+  const client = new Anthropic();
+  return createAgentRunner({ client, tools: createTools(createTrialData()) });
 }
 
 // DynamoDB in production; in-process for local dev, where there is no table

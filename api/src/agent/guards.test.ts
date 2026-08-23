@@ -2,15 +2,26 @@ import { MAX_MESSAGE_CHARS, checkSameSite, validateMessage } from './guards';
 
 describe('validateMessage', () => {
   it('accepts an ordinary question', () => {
-    expect(validateMessage('which phase 3 EGFR drugs are recruiting?')).toEqual({ ok: true });
+    // The validated string is carried through, so the route hands the runner a
+    // string rather than re-casting the unknown body field.
+    expect(validateMessage('which phase 3 EGFR drugs are recruiting?')).toEqual({
+      ok: true,
+      value: 'which phase 3 EGFR drugs are recruiting?',
+    });
   });
 
   it('accepts newlines and tabs, which appear in pasted text', () => {
-    expect(validateMessage('line one\nline two\tindented\r\n')).toEqual({ ok: true });
+    expect(validateMessage('line one\nline two\tindented\r\n')).toEqual({
+      ok: true,
+      value: 'line one\nline two\tindented\r\n',
+    });
   });
 
   it('accepts exactly the cap', () => {
-    expect(validateMessage('a'.repeat(MAX_MESSAGE_CHARS))).toEqual({ ok: true });
+    expect(validateMessage('a'.repeat(MAX_MESSAGE_CHARS))).toEqual({
+      ok: true,
+      value: 'a'.repeat(MAX_MESSAGE_CHARS),
+    });
   });
 
   it('rejects one character over the cap', () => {

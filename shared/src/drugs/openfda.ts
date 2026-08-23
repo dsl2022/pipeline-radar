@@ -1,3 +1,4 @@
+import { apiBase } from '../net';
 import { canon } from './canon';
 import { brandishAliases } from './rxnorm';
 import type { DrugRow } from './cluster';
@@ -45,9 +46,10 @@ export function fdaStatusOf(key: string, fdaMap: ReadonlyMap<string, FdaBadge | 
   return fdaMap.get(key) ? 'approved' : 'investigational';
 }
 
-// Relative /api base — see api.ts; the proxy also pools openFDA's 1k/day
-// per-IP quota behind a shared server-side cache.
-const BASE = '/api/openfda/drug';
+// Resolved per call, not captured at module load: the API service sets an
+// absolute base at startup (net.ts), and a const here would freeze the
+// browser default before that ran.
+const base = () => `${apiBase()}/openfda/drug`;
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 const mem = new Map<string, FdaBadge | null>();
@@ -106,7 +108,7 @@ async function fetchAllApps(field: 'generic_name' | 'brand_name', names: string[
   for (;;) {
     const skip = apps.length;
     const res = await fetch(
-      `${BASE}/drugsfda.json?search=${encodeURIComponent(search)}&limit=100${skip > 0 ? `&skip=${skip}` : ''}`,
+      `${base()}/drugsfda.json?search=${encodeURIComponent(search)}&limit=100${skip > 0 ? `&skip=${skip}` : ''}`,
     );
     if (res.status === 404) {
       if (skip === 0) return null; // miss is DATA: {"error":{"code":"NOT_FOUND"}} (§6.5)
@@ -266,7 +268,7 @@ export async function fetchTopReactions(canonName: string): Promise<Reaction[]> 
     return stored;
   }
   const res = await fetch(
-    `${BASE}/event.json?search=${encodeURIComponent(
+    `${base()}/event.json?search=${encodeURIComponent(
       `patient.drug.openfda.generic_name:"${canonName}"`,
     )}&count=patient.reaction.reactionmeddrapt.exact`,
   );

@@ -1,18 +1,35 @@
+import { createHash } from 'node:crypto';
 import express, { type Request, type Response, type Router } from 'express';
 import { checkSameSite, validateMessage } from './guards';
 import { SESSION_COOKIE, newSessionId, signSession, verifySession } from './session';
 import type { Limiter } from './limits';
 import { openSse } from './sse';
+import { describeStop, type AgentRunner } from './runner';
 
-// The request pipeline that runs before the model. There is no model yet:
-// /chat streams a canned reply. Every gate that guards spend is real, and is
-// here first on purpose - the failure mode being avoided is a working agent
-// on screen with no controls in front of it.
+// The request pipeline in front of the model, and the model call itself.
+// Every gate that guards spend runs before a single token is bought.
 
 export interface AgentConfig {
   sessionSecret: string;
   allowedOrigins: string[];
   limiter: Limiter;
+  /** Absent when no API key is configured; /chat then refuses rather than pretending. */
+  runner?: AgentRunner;
+}
+
+/**
+ * What a turn is allowed to leave in CloudWatch.
+ *
+ * Never the question itself. The prompt is a user's own words and it goes to
+ * Langfuse, where access is deliberate; CloudWatch is read casually by anyone
+ * debugging a deploy. A hash still tells us "the same question failed twice",
+ * which is the only thing the log needed it for.
+ */
+function fingerprint(message: string) {
+  return {
+    hash: createHash('sha256').update(message).digest('hex').slice(0, 16),
+    chars: message.length,
+  };
 }
 
 /** Minimal cookie parse - avoids a dependency for one header. */
@@ -85,7 +102,15 @@ export function createAgentRouter(config: AgentConfig): Router {
       return deny(res, 400, valid.reason, 'input');
     }
 
-    // Gate 4 - kill switch and rate limits. Last, and deliberately: the
+    // Gate 4 - is there a model at all. Before the limiter on purpose: a
+    // service running without a key is broken, and it should not also spend
+    // every caller's allowance telling them so.
+    if (!config.runner) {
+      return deny(res, 503, 'assistant unavailable', 'not-configured');
+    }
+    const runner = config.runner;
+
+    // Gate 5 - kill switch and rate limits. Last, and deliberately: the
     // cheaper checks above reject junk without spending a DynamoDB write, and
     // a request that fails them should not consume the caller's allowance.
     void (async () => {
@@ -109,13 +134,56 @@ export function createAgentRouter(config: AgentConfig): Router {
         );
       }
 
+      // Past this point the response has begun, so failures can no longer be
+      // an HTTP status - they are an SSE error event on an open 200 stream.
       const stream = openSse(res);
       stream.event('open', { sessionId: sessionId.slice(0, 8) });
-      stream.event('delta', {
-        text: 'The request pipeline is live. No model is wired up yet - this reply is canned.',
-      });
-      stream.event('done', { reason: 'stub' });
-      stream.close();
+
+      const startedAt = Date.now();
+      const fp = fingerprint(valid.value);
+      // The client going away aborts the turn: an abandoned tab must stop
+      // costing money the moment nobody is reading the answer.
+      const gone = new AbortController();
+      res.on('close', () => gone.abort());
+
+      try {
+        const outcome = await runner.run(
+          valid.value,
+          (event, data) => stream.event(event, data),
+          gone.signal,
+        );
+
+        const note = describeStop(outcome.stopReason, outcome.timedOut);
+        if (note) stream.event('notice', { text: note });
+        stream.event('done', { stop: outcome.stopReason, truncated: note !== null });
+
+        console.log(
+          JSON.stringify({
+            evt: 'agent.turn',
+            session: sessionId.slice(0, 8),
+            ...fp,
+            stop: outcome.stopReason,
+            timed_out: outcome.timedOut,
+            iterations: outcome.iterations,
+            tools: outcome.toolCalls,
+            usage: outcome.usage,
+            ms: Date.now() - startedAt,
+          }),
+        );
+      } catch (err) {
+        console.error(
+          JSON.stringify({
+            evt: 'agent.turn_error',
+            session: sessionId.slice(0, 8),
+            ...fp,
+            err: String(err),
+            ms: Date.now() - startedAt,
+          }),
+        );
+        stream.event('error', { message: 'the assistant could not finish this turn' });
+      } finally {
+        stream.close();
+      }
     })();
   });
 
