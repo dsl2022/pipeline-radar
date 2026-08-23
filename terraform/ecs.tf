@@ -49,6 +49,10 @@ resource "aws_ecs_task_definition" "api" {
   memory             = 1024
   execution_role_arn = aws_iam_role.execution.arn
 
+  # The container's own identity (DynamoDB counters). Distinct from the
+  # execution role, which only pulls the image and resolves secrets.
+  task_role_arn = aws_iam_role.task.arn
+
   runtime_platform {
     operating_system_family = "LINUX"
     cpu_architecture        = "X86_64"
@@ -65,6 +69,17 @@ resource "aws_ecs_task_definition" "api" {
     # Defaults to 30s, which would SIGKILL mid-turn. 120s is the Fargate
     # maximum and matches the turn bound.
     stopTimeout = 120
+
+    environment = [
+      { name = "AGENT_TABLE", value = aws_dynamodb_table.agent.name },
+    ]
+
+    # secrets, not environment: an env var shows up in
+    # `aws ecs describe-task-definition` to anyone with read access. The ECS
+    # agent resolves this at container start and injects it into the process.
+    secrets = [
+      { name = "ANTHROPIC_API_KEY", valueFrom = data.aws_secretsmanager_secret.anthropic.arn },
+    ]
     logConfiguration = {
       logDriver = "awslogs"
       options = {
