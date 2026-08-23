@@ -67,9 +67,28 @@ new_session() {
   curl -s -m 45 -D - -o /dev/null "$BASE/api/agent/session" \
     | grep -i '^set-cookie' | tr -d '\r' | sed 's/^[Ss]et-[Cc]ookie: //' | cut -d';' -f1
 }
+# The turn is real now: this spends Anthropic tokens on every deploy. The
+# message is deliberately one no tool can help with, so the model answers in a
+# sentence and the turn stays a fraction of a cent. There is no test-bypass
+# header and no mock hook - a smoke test that skips the real path proves
+# nothing about the real path.
 chat() { # cookie
   code -X POST -H 'content-type: application/json' -H "Cookie: $1" \
-    -H "Origin: $BASE" -d '{"message":"smoke test"}' "$BASE/api/agent/chat"
+    -H "Origin: $BASE" -d '{"message":"Reply with just the word: ready"}' "$BASE/api/agent/chat"
+}
+
+# Burn a session's quota cheaply.
+#
+# The one-word prompt keeps each turn to a handful of output tokens, so these
+# usually finish well inside the two-second cap (measured ~1.4s). The cap is a
+# ceiling, not the mechanism: if a turn does run long, the route aborts it when
+# the client hangs up, and the allowance is still consumed either way because
+# the limiter counts a turn BEFORE the model is called. That is what makes the
+# next assertion meaningful without paying for six full answers.
+burn() { # cookie
+  curl -s -m 2 -o /dev/null -X POST -H 'content-type: application/json' -H "Cookie: $1" \
+    -H "Origin: $BASE" -d '{"message":"Reply with just the word: ready"}' \
+    "$BASE/api/agent/chat" >/dev/null 2>&1 || true
 }
 
 echo "smoke: $BASE"
@@ -121,19 +140,33 @@ check "oversized message is refused"     400 \
   "$(code -X POST -H 'content-type: application/json' -H "Cookie: $COOKIE" \
       -d "{\"message\":\"$(head -c 4100 /dev/zero | tr '\0' 'a')\"}" "$BASE/api/agent/chat")"
 
-# --- the happy path streams --------------------------------------------------
+# --- the happy path streams a real answer ------------------------------------
 check "chat streams for a valid session" 200 "$(chat "$COOKIE")"
 grep -q '^event: done' /tmp/smoke.body \
   && pass "stream reaches the done event" \
   || fail "stream reaches the done event" "event: done" "$(head -c 60 /tmp/smoke.body)"
 
+# The model actually produced text. Without this the suite would pass just as
+# happily against an endpoint that opens a stream and closes it again - which
+# is exactly what a missing or rejected API key looks like from outside.
+grep -q '^event: delta' /tmp/smoke.body \
+  && pass "the model produced output" \
+  || fail "the model produced output" "event: delta" "$(head -c 120 /tmp/smoke.body)"
+
+# A turn that ended any other way is a truncation, a refusal or a timeout, and
+# the deploy should say so rather than counting it as a working assistant.
+grep -q '"stop":"end_turn"' /tmp/smoke.body \
+  && pass "the turn finished cleanly" \
+  || fail "the turn finished cleanly" '"stop":"end_turn"' "$(grep -o '"stop":"[a-z_]*"' /tmp/smoke.body | head -1)"
+
 # --- rate limits are enforced ------------------------------------------------
 # Session cap is 5/min. Burn it on a throwaway session so the assertion does
 # not depend on how many turns the checks above happened to use.
 BURST="$(new_session)"
-last=""
-for _ in $(seq 1 7); do last="$(chat "$BURST")"; done
-check "session rate limit engages"       429 "$last"
+for _ in $(seq 1 6); do burn "$BURST"; done
+# This one runs to completion: a 429 is refused before the model, so it costs
+# nothing and returns immediately.
+check "session rate limit engages"       429 "$(chat "$BURST")"
 
 RETRY="$(curl -s -m 45 -o /dev/null -D - -X POST -H 'content-type: application/json' \
   -H "Cookie: $BURST" -H "Origin: $BASE" -d '{"message":"x"}' "$BASE/api/agent/chat" \

@@ -3,6 +3,7 @@ import { createApp } from '../app';
 import { createLimiter, DEFAULT_LIMITS } from './limits';
 import { createMemoryStore, type AgentStore } from './store';
 import { SESSION_COOKIE, newSessionId, signSession } from './session';
+import type { AgentRunner, RunOutcome } from './runner';
 
 const SECRET = 'test-secret-do-not-use';
 const ORIGIN = 'https://app.example.com';
@@ -13,11 +14,34 @@ const ORIGIN = 'https://app.example.com';
 // second.
 const T0 = Date.UTC(2026, 7, 23, 12, 0, 0);
 
-const app = (over: Partial<typeof DEFAULT_LIMITS> = {}, store?: AgentStore) => {
+// A runner that spends nothing. The model itself is covered in runner.test.ts;
+// what these tests are about is the pipeline around it.
+const stubRunner = (over: Partial<RunOutcome> = {}): AgentRunner => ({
+  run: async (_message, emit) => {
+    emit('delta', { text: 'an answer' });
+    return {
+      stopReason: 'end_turn',
+      iterations: 1,
+      toolCalls: [],
+      timedOut: false,
+      usage: { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 },
+      ...over,
+    };
+  },
+});
+
+// `null` means "deliberately no runner" - passing undefined would fall back to
+// the default parameter and quietly test the stub instead.
+const app = (
+  over: Partial<typeof DEFAULT_LIMITS> = {},
+  store?: AgentStore,
+  runner: AgentRunner | null = stubRunner(),
+) => {
   const now = () => T0;
   return createApp([], {
     sessionSecret: SECRET,
     allowedOrigins: [ORIGIN],
+    runner: runner ?? undefined,
     limiter: createLimiter({
       store: store ?? createMemoryStore(now),
       now,
@@ -153,6 +177,97 @@ describe('POST /api/agent/chat', () => {
       .send({ message: 'hello' });
     expect(res.body.error).toBe('session required');
     expect(JSON.stringify(res.body)).not.toContain('gate');
+  });
+});
+
+describe('the model layer', () => {
+  const chat = (a: ReturnType<typeof app>, message = 'which phase 3 trials are recruiting?') =>
+    request(a).post('/api/agent/chat').set('Cookie', validCookie()).set('Origin', ORIGIN).send({ message });
+
+  it('streams the model output through to the client', async () => {
+    const res = await chat(app());
+    expect(res.text).toContain('event: delta');
+    expect(res.text).toContain('an answer');
+    expect(res.text).toContain('event: done');
+  });
+
+  // A stub reply on a production endpoint looks exactly like a working
+  // assistant to everyone except the person who needs to know the key is gone.
+  it('refuses rather than serving a canned answer when no model is configured', async () => {
+    const res = await chat(app({}, undefined, null));
+    expect(res.status).toBe(503);
+    expect(res.body).toEqual({ error: 'assistant unavailable' });
+  });
+
+  // A service with no key is broken; it should not also exhaust the caller's
+  // allowance while telling them so.
+  it('does not spend the rate-limit allowance when there is no model', async () => {
+    const a = app({ sessionPerMinute: 2 }, undefined, null);
+    const cookie = validCookie();
+    const post = () =>
+      request(a).post('/api/agent/chat').set('Cookie', cookie).set('Origin', ORIGIN).send({ message: 'hi' });
+
+    for (let i = 0; i < 5; i += 1) expect((await post()).status).toBe(503);
+    // Still 503 rather than 429: none of those five was counted.
+    expect((await post()).status).toBe(503);
+  });
+
+  it('tells the client when an answer was cut short instead of passing it off as complete', async () => {
+    const res = await chat(app({}, undefined, stubRunner({ stopReason: 'max_tokens' })));
+    expect(res.text).toContain('event: notice');
+    expect(res.text).toMatch(/length limit/);
+    expect(res.text).toContain('"truncated":true');
+  });
+
+  it('marks a clean finish as not truncated', async () => {
+    const res = await chat(app());
+    expect(res.text).toContain('"truncated":false');
+    expect(res.text).not.toContain('event: notice');
+  });
+
+  // The response has already begun, so a failure cannot be an HTTP status.
+  it('reports a mid-stream failure as an error event on the open stream', async () => {
+    const failing: AgentRunner = {
+      run: async () => {
+        throw new Error('anthropic overloaded');
+      },
+    };
+    const res = await chat(app({}, undefined, failing));
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('event: error');
+    // Never the upstream's words: they are ours to log, not to publish.
+    expect(res.text).not.toContain('anthropic overloaded');
+  });
+
+  it('never writes the user\'s question to the log', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const secret = 'my employer is acquiring a company called Northwind';
+    await chat(app(), secret);
+
+    const written = log.mock.calls.flat().join(' ');
+    log.mockRestore();
+    expect(written).toContain('agent.turn');
+    expect(written).not.toContain('Northwind');
+    expect(written).not.toContain(secret);
+    // The hash still answers "did this same question fail twice?".
+    expect(written).toMatch(/"hash":"[0-9a-f]{16}"/);
+    expect(written).toContain(`"chars":${secret.length}`);
+  });
+
+  it('does not log the question when the turn fails either', async () => {
+    const err = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const failing: AgentRunner = {
+      run: async () => {
+        throw new Error('boom');
+      },
+    };
+    const secret = 'confidential pipeline question about Northwind';
+    await chat(app({}, undefined, failing), secret);
+
+    const written = err.mock.calls.flat().join(' ');
+    err.mockRestore();
+    expect(written).toContain('agent.turn_error');
+    expect(written).not.toContain('Northwind');
   });
 });
 

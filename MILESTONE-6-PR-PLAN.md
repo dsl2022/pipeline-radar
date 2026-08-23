@@ -87,7 +87,7 @@ authoring machine). CI's `api` job covers it — watch that job on this PR.
 
 ---
 
-### PR 2 — Infra unblock
+### PR 2 — Infra unblock ✅ merged
 **Branch:** `m6/infra-unblock` · **Size:** ~10 lines Terraform · **Spend:** none
 
 Four settings that make an SSE chat endpoint possible at all. Without these the
@@ -105,7 +105,7 @@ CloudFront*, and a 90-second SSE stream completes end to end.
 
 ---
 
-### PR 3 — Agent provisioning
+### PR 3 — Agent provisioning ✅ merged
 **Branch:** `m6/agent-provisioning` · **Size:** ~70 lines Terraform · **Spend:** none
 
 - `terraform/bootstrap/main.tf` — widen the deploy policy with
@@ -126,7 +126,7 @@ secret injected.
 
 ---
 
-### PR 4 — Request pipeline, no LLM
+### PR 4 — Request pipeline, no LLM ✅ merged
 **Branch:** `m6/request-pipeline` · **Size:** ~400 LOC · **Spend:** none
 
 `POST /api/agent/chat` exists and streams a canned response. Every gate that
@@ -148,7 +148,7 @@ stays open (fake timers), 5k input → 400.
 
 ---
 
-### PR 5 — Rate limits + kill switch
+### PR 5 — Rate limits + kill switch ✅ merged
 **Branch:** `m6/rate-limits` · **Size:** ~350 LOC · **Spend:** none
 
 - Token buckets: per-session (5/min, 30/hr, 300k tokens/day), per-IP (20/min,
@@ -171,7 +171,7 @@ instances.
 
 ---
 
-### PR 6 — Smoke suite + WAF
+### PR 6 — Smoke suite + WAF ✅ merged
 **Branch:** `m6/smoke-and-waf` · **Size:** ~200 LOC + Terraform · **Spend:** none
 
 Proves PRs 2–5 are live in production, before anything can cost money.
@@ -200,7 +200,7 @@ been seen to fail when its control is deliberately disabled.
 
 ---
 
-### PR 7 — Agent core
+### PR 7 — Agent core ✅ merged
 **Branch:** `m6/agent-core` · **Size:** ~600 LOC · **Spend:** first real spend
 **Gated on:** both API keys in place
 
@@ -396,6 +396,74 @@ emitted as a metric.
   pointing at source, so nothing is broken today. **PR 12 (evals) will hit this**
   if eval code under `api/` imports fixtures by package name. Fix then by adding
   an explicit `"./samples/*": "./src/samples/*"` export.
+
+- **A cache populated *after* `await` does not protect a single turn.** The
+  tool runner executes every `tool_use` block in one assistant message
+  concurrently (`BetaToolRunner` -> `Promise.all`), and parallel tool use is
+  the default. So the common case — one question, three tools, same disease —
+  has all three miss an empty cache in the same tick and each start its own
+  registry request. It *looks* cached, because a sequential repeat test passes.
+  `data.ts` now stores the in-flight Promise and joins it, deleting the entry
+  on rejection so a failure is still never cached. **Any read-through cache
+  behind a tool needs single-flight, and its test needs `Promise.all`, not
+  sequential awaits.**
+- **Jest's `moduleNameMapper` redirects the runtime require, not TypeScript's
+  type resolution.** The api workspace maps `@pipeline-radar/shared/*` to
+  `shared/src/*`, so tests *run* against source — but `tsc` still resolves the
+  types through the package's `exports` map into `shared/dist`. The moment the
+  api began importing shared, every suite that touched it failed in CI with
+  `Cannot find module '@pipeline-radar/shared/net'` while passing locally,
+  because the local tree had a `dist` left over from an earlier build. The api
+  CI job now runs `npm run build -w @pipeline-radar/shared` first.
+  **To reproduce a CI-only failure of this shape, `rm -rf shared/dist` before
+  running** — a stale build artifact is invisible local state.
+- **An OOM-killed Jest worker reads as a flaky test, not as a resource limit.**
+  Adding the Anthropic SDK and zod raised per-worker memory enough that the
+  default `cpus - 1` workers exhausted a 3.8 GB Docker VM. The output is
+  `A jest worker process ... was terminated by another process: signal=SIGKILL`
+  and — the dangerous part — **a whole suite vanishes from the totals**
+  (`Tests: 157 passed` where 185 were expected) while the run still reports
+  "passed" for everything it did manage to run. A total that shrinks is a
+  failure even when nothing says "failed". `api/jest.config.js` now pins
+  `maxWorkers: 3`; ubuntu-latest has 4 cores, so CI's behaviour is unchanged.
+- **`betaZodTool` does not strip unsupported JSON Schema keywords, and
+  `strict: true` makes that fatal.** The SDK runs `transformJSONSchema` over
+  structured *output* schemas but not over tool *input* schemas, so a Zod
+  `.min()/.max()` reaches the API verbatim and the request dies with
+  `400 ... For 'integer' type, properties maximum, minimum are not supported`
+  — before a single token is generated, so it reads as "the agent is broken",
+  not "one field is wrong". `stripUnsupported()` in `api/src/agent/tools.ts`
+  removes them from the wire schema while Zod keeps enforcing them in-process.
+  The stripped list covers **every** unsupported constraint (numeric, string
+  length, array bounds), not just the one the error named — same shape as the
+  IAM lesson above.
+- **A JavaScript default parameter fires on an explicitly-passed `undefined`.**
+  A test written as `app({}, undefined, undefined)` to mean "no runner
+  configured" silently received the stub runner instead and asserted nothing.
+  It only surfaced because the assertion was specific (`503`) rather than
+  loose. Use `null` as the "deliberately absent" sentinel in test helpers.
+- **The shared data modules are browser-shaped: their `/api` base is
+  relative.** Node's `fetch` rejects a relative URL outright, so running them
+  server-side needs `setApiBase()` (`shared/src/net.ts`) before first use. The
+  API service points it at **its own proxy** rather than at openFDA directly,
+  so the agent's lookups still go through the TTL cache that pools openFDA's
+  1,000/day per-IP quota — both tasks share one NAT address.
+
+## Measured, so the next PR need not re-derive it
+
+| Measurement | Value (2026-08-23, NSCLC) |
+|---|---|
+| Registry match vs. one page fetched | 2,460 active trials / 500 fetched |
+| Raw JSON of a 500-trial page | ~237,000 chars |
+| Largest tool result at max limits (`search_trials`, limit 50) | ~18,100 chars — inside the 24k budget |
+| First turn, 2 iterations, 2 tool calls | 4,800 in / 948 out / 2,454 cache-read / 28.5s |
+| Second turn (frozen prefix reused) | 449 in / 244 out / **4,908 cache-read, 0 cache-creation** |
+| Smoke turn ("reply with one word") | 107 in / 4 out / ~1.4s |
+
+The cache numbers are the ones to protect: the second turn read the entire
+prefix from cache and created none. Anything that varies per turn in the system
+prompt or the tool block — a date, a session id, a reordered tool array —
+turns that 4,908 back into full-price input on every request.
 
 ## Repo conventions to follow
 

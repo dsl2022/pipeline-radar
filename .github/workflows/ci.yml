@@ -62,6 +62,14 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
+      # The api now imports @pipeline-radar/shared, and TypeScript resolves
+      # those types through the package's exports map into shared/dist - not
+      # through Jest's moduleNameMapper, which only redirects the runtime
+      # require. Without this step every suite that touches shared fails with
+      # "Cannot find module '@pipeline-radar/shared/net'". It passes locally
+      # on a tree that happens to have a built dist lying around, which is
+      # exactly why it has to be explicit here.
+      - run: npm run build -w @pipeline-radar/shared
       - run: npm test -w pipeline-radar-api
       # Context is the repo root: the image needs the shared workspace.
       - name: docker build

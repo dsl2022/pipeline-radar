@@ -17,6 +17,14 @@ process.env.AWS_ACCESS_KEY_ID ??= 'local';
 process.env.AWS_SECRET_ACCESS_KEY ??= 'local';
 process.env.AWS_REGION ??= 'us-east-1';
 
+// Jest's 5s default is a poor fit for a suite that talks to a real database.
+// Every case here is one or two round trips to DynamoDB Local, which shares a
+// machine with ten other test suites; under that load a plain get can take
+// longer than five seconds and the suite fails on scheduling rather than on
+// behaviour. The assertions are about correctness, not latency, so the budget
+// is set where it stops reporting load as a bug.
+jest.setTimeout(20_000);
+
 const client = new DynamoDBClient({ endpoint: ENDPOINT });
 const doc = DynamoDBDocumentClient.from(client);
 const store = createDynamoStore(TABLE, ENDPOINT);

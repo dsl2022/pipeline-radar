@@ -1,3 +1,4 @@
+import { apiBase } from '../net';
 import { canon, isCategoryTerm, isResearchCode } from './canon';
 import type { DrugRow } from './cluster';
 
@@ -9,8 +10,8 @@ import type { DrugRow } from './cluster';
 // - A miss (HTTP 200, empty idGroup) is SIGNAL: likely investigational. null means
 //   exactly that; errors are never cached and never become null.
 
-// Relative /api base — see api.ts for the proxy routing story.
-const BASE = '/api/rxnorm/rxcui.json';
+// Resolved per call, not captured at module load - see net.ts.
+const base = () => `${apiBase()}/rxnorm/rxcui.json`;
 
 const mem = new Map<string, string | null>();
 
@@ -45,7 +46,7 @@ export async function resolveRxcui(canonName: string): Promise<string | null> {
     mem.set(canonName, stored);
     return stored;
   }
-  const res = await fetch(`${BASE}?name=${encodeURIComponent(canonName)}&allsrc=1`);
+  const res = await fetch(`${base()}?name=${encodeURIComponent(canonName)}&allsrc=1`);
   if (!res.ok) throw new Error(`RxNorm returned ${res.status}`);
   const data = (await res.json()) as { idGroup?: { rxnormId?: string[] } };
   const cui = data.idGroup?.rxnormId?.[0] ?? null;
