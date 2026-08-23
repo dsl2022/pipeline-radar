@@ -144,6 +144,13 @@ resource "aws_cloudfront_distribution" "main" {
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
+
+      # Defaults to 30s, and for a streamed response it applies to the gap
+      # BETWEEN packets - so an agent turn that thinks for 35s without
+      # emitting a token would have its SSE stream cut. 60 is the maximum
+      # without a service quota increase. The real fix is the server-side
+      # heartbeat (every 10s); this is headroom behind it.
+      origin_read_timeout = 60
     }
   }
 
@@ -159,8 +166,12 @@ resource "aws_cloudfront_distribution" "main" {
     path_pattern           = "/api/*"
     target_origin_id       = "alb"
     viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
+    # The agent chat endpoint is a POST. Without the write methods here
+    # CloudFront rejects it with 403 before it ever reaches the ALB, which
+    # reads like an application bug. cached_methods stays GET/HEAD - a POST
+    # must never be served from cache.
+    allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods  = ["GET", "HEAD"]
 
     # The proxy caches server-side; CloudFront must not double-cache (and must
     # forward query strings, which the API cache key needs).

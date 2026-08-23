@@ -63,9 +63,21 @@ break the feature outright; nothing agent-shaped can ship until they are fixed.
 
 ### 2.1 CloudFront rejects POST on `/api/*` — hard blocker
 
-[terraform/web.tf:162](terraform/web.tf#L162) allows only `["GET","HEAD","OPTIONS"]`.
-A `POST /api/agent/chat` returns **403 from CloudFront before it ever reaches the
-ALB**. Fix:
+[terraform/web.tf:162](terraform/web.tf#L162) allows only `["GET","HEAD","OPTIONS"]`,
+so CloudFront rejects a `POST /api/agent/chat` before it ever reaches the ALB.
+
+**The symptom is worse than a 403.** The SPA-routing `custom_error_response`
+maps 403 to `200 /index.html`, so the rejected POST comes back as **HTTP 200
+carrying the app's HTML shell** — verified against production:
+
+```
+POST /api/ctgov/v2/studies  ->  200  <!doctype html><html lang="en">...
+```
+
+A client would see a success status and a body that is not JSON, with nothing
+in any log identifying CloudFront as the cause. After the fix the same request
+returns `405 {"error":"proxy is read-only"}` from our own proxy, which is the
+signal that the method is being forwarded. Fix:
 
 ```hcl
 allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]

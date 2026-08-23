@@ -42,9 +42,12 @@ resource "aws_ecs_task_definition" "api" {
   family                   = "${var.project}-api"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = 256
-  memory                   = 512
-  execution_role_arn       = aws_iam_role.execution.arn
+  # SSE connections are long-lived and pinned to whichever task accepted
+  # them, so chat traffic sits on top of proxy traffic rather than
+  # replacing it. 0.25 vCPU was sized for a stateless cache proxy.
+  cpu                = 512
+  memory             = 1024
+  execution_role_arn = aws_iam_role.execution.arn
 
   runtime_platform {
     operating_system_family = "LINUX"
@@ -71,8 +74,11 @@ resource "aws_ecs_service" "api" {
   name            = "${var.project}-api"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.api.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  # Two tasks so a deploy or a task replacement does not take the agent
+  # offline. Note this is what makes in-memory rate-limit counters wrong:
+  # they must be shared (DynamoDB) - see MILESTONE-6-PLAN.md 6.3.
+  desired_count = 2
+  launch_type   = "FARGATE"
 
   # Public subnet + no NAT: the public IP is this task's outbound path.
   network_configuration {
