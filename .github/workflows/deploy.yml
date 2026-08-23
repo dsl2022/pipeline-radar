@@ -126,6 +126,17 @@ jobs:
             --distribution-id "$(terraform output -raw distribution_id)" \
             --paths '/*'
 
+      # Every cheaper signal in this pipeline has lied at least once: apply
+      # returned 0 while ECS rolled back, docker build succeeded on an image
+      # that could not boot, and a 200 meant the site was up rather than that
+      # the deploy landed. This asserts the controls are live against the real
+      # URL. It briefly disables the agent to test the kill switch, and
+      # restores it on any exit.
+      - name: Smoke the deployed controls
+        working-directory: terraform
+        run: |
+          ../scripts/smoke.sh "$(terraform output -raw app_url)" "$(terraform output -raw agent_table_name)"
+
       - name: App URL
         working-directory: terraform
         run: echo "Deployed -> $(terraform output -raw app_url)" >> "$GITHUB_STEP_SUMMARY"
