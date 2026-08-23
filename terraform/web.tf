@@ -124,6 +124,44 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+# SPA routing is done at the edge on the way IN, not by rewriting errors on
+# the way out. custom_error_response is distribution-wide - it cannot be
+# scoped to a cache behaviour - and it rewrites ORIGIN errors as well as
+# CloudFront's own. With a 403 -> 200 /index.html rule in place, every denial
+# the API returns (no session, forged cookie, cross-site) reached the browser
+# as HTTP 200 carrying the HTML shell, so the agent's guards looked like they
+# had passed. Verified against production before this change:
+#
+#   GET /api/definitely-not-a-route  ->  200  <!doctype html>...   (origin said 404)
+#
+# Rewriting the URI before the origin means SPA routes never produce an error
+# to rewrite, so API status codes survive intact.
+resource "aws_cloudfront_function" "spa_rewrite" {
+  name    = "${var.project}-spa-rewrite"
+  runtime = "cloudfront-js-2.0"
+  comment = "Serve index.html for client-side routes without touching API responses"
+  publish = true
+
+  code = <<-JS
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+
+      // Defensive: this function is only attached to the S3 behaviour, so
+      // /api/* should never reach it. Cheap insurance if that ever changes.
+      if (uri.startsWith('/api/')) return request;
+
+      // Anything with an extension is a real object - let S3 answer, including
+      // answering 404 for a genuinely missing asset.
+      var last = uri.substring(uri.lastIndexOf('/') + 1);
+      if (last.indexOf('.') !== -1) return request;
+
+      request.uri = '/index.html';
+      return request;
+    }
+  JS
+}
+
 resource "aws_cloudfront_distribution" "main" {
   enabled             = true
   comment             = "${var.project} ${var.env_name}"
@@ -160,6 +198,11 @@ resource "aws_cloudfront_distribution" "main" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_rewrite.arn
+    }
   }
 
   ordered_cache_behavior {
@@ -177,20 +220,6 @@ resource "aws_cloudfront_distribution" "main" {
     # forward query strings, which the API cache key needs).
     cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
-  }
-
-  # SPA routing: unknown paths come back from S3/OAC as 403 - serve the app
-  # shell and let the client router take it from there.
-  custom_error_response {
-    error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
-
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
   }
 
   restrictions {

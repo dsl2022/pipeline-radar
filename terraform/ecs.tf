@@ -72,6 +72,8 @@ resource "aws_ecs_task_definition" "api" {
 
     environment = [
       { name = "AGENT_TABLE", value = aws_dynamodb_table.agent.name },
+      # Origins allowed to POST to the agent, for the cross-site check.
+      { name = "APP_ORIGIN", value = "https://${aws_cloudfront_distribution.main.domain_name}" },
     ]
 
     # secrets, not environment: an env var shows up in
@@ -79,6 +81,7 @@ resource "aws_ecs_task_definition" "api" {
     # agent resolves this at container start and injects it into the process.
     secrets = [
       { name = "ANTHROPIC_API_KEY", valueFrom = data.aws_secretsmanager_secret.anthropic.arn },
+      { name = "SESSION_SECRET", valueFrom = aws_secretsmanager_secret.session.arn },
     ]
     logConfiguration = {
       logDriver = "awslogs"
