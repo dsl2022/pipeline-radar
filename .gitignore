@@ -6,6 +6,11 @@ dist/
 # local tool state
 .claude/
 
+# secrets — ANTHROPIC_API_KEY lives here locally, Secrets Manager in prod
+.env
+.env.*
+!.env.example
+
 # interview material — repo is public, keep the brief out of git
 Pipeline-Radar-Candidate-Brief.pdf
 branch_structure.json
@@ -27,3 +32,4 @@ crash.log
 override.tf
 override.tf.json
 *_override.tf
+Screenshot*.png
