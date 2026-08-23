@@ -164,6 +164,7 @@ resource "aws_cloudfront_function" "spa_rewrite" {
 
 resource "aws_cloudfront_distribution" "main" {
   enabled             = true
+  web_acl_id          = aws_wafv2_web_acl.main.arn
   comment             = "${var.project} ${var.env_name}"
   default_root_object = "index.html"
 
