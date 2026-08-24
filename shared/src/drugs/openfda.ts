@@ -1,4 +1,5 @@
 import { apiBase } from '../net';
+import { createInFlight } from '../single-flight';
 import { canon } from './canon';
 import { brandishAliases } from './rxnorm';
 import type { DrugRow } from './cluster';
@@ -75,9 +76,22 @@ function writeStore(key: string, value: unknown) {
   }
 }
 
+// Two concurrent lookups of the same thing should cost one request. The
+// reachable cases: the agent calling check_fda_approval for one drug while
+// another turn does the same, and App.tsx's two overlapping badgeDrugs passes.
+//
+// Keyed on the batch query rather than on the drug, because the batch IS the
+// request - splitting per drug would undo the batching the research measured
+// as necessary (never per-row calls). Two batches that overlap only partially
+// therefore still both run; identical ones collapse.
+const appsInFlight = createInFlight<FdaApp[] | null>();
+const aeInFlight = createInFlight<Reaction[]>();
+
 export function clearFdaCache() {
   mem.clear();
   aeMem.clear();
+  appsInFlight.clear();
+  aeInFlight.clear();
 }
 
 interface FdaApp {
@@ -103,6 +117,16 @@ interface FdaResponse {
  * never be mistaken for a complete one (the truncation invariant).
  */
 async function fetchAllApps(field: 'generic_name' | 'brand_name', names: string[]): Promise<FdaApp[] | null> {
+  // The whole paginated walk is one logical request, so it is joined as one.
+  // Sorted names so two callers that built the same chunk in a different order
+  // still share it.
+  return appsInFlight.join(`${field}:${[...names].sort().join(',')}`, () => fetchAllAppsUncached(field, names));
+}
+
+async function fetchAllAppsUncached(
+  field: 'generic_name' | 'brand_name',
+  names: string[],
+): Promise<FdaApp[] | null> {
   const search = `openfda.${field}:(${names.map((n) => `"${n}"`).join(' ')})`;
   const apps: FdaApp[] = [];
   for (;;) {
@@ -267,21 +291,23 @@ export async function fetchTopReactions(canonName: string): Promise<Reaction[]> 
     aeMem.set(canonName, stored);
     return stored;
   }
-  const res = await fetch(
-    `${base()}/event.json?search=${encodeURIComponent(
-      `patient.drug.openfda.generic_name:"${canonName}"`,
-    )}&count=patient.reaction.reactionmeddrapt.exact`,
-  );
-  let top: Reaction[];
-  if (res.status === 404) {
-    top = [];
-  } else if (!res.ok) {
-    throw new Error(`openFDA returned ${res.status}`);
-  } else {
-    const data = (await res.json()) as { results?: Reaction[] };
-    top = (data.results ?? []).slice(0, 5);
-  }
-  aeMem.set(canonName, top);
-  writeStore(`fdaae:${canonName}`, top);
-  return top;
+  return aeInFlight.join(canonName, async () => {
+    const res = await fetch(
+      `${base()}/event.json?search=${encodeURIComponent(
+        `patient.drug.openfda.generic_name:"${canonName}"`,
+      )}&count=patient.reaction.reactionmeddrapt.exact`,
+    );
+    let top: Reaction[];
+    if (res.status === 404) {
+      top = [];
+    } else if (!res.ok) {
+      throw new Error(`openFDA returned ${res.status}`);
+    } else {
+      const data = (await res.json()) as { results?: Reaction[] };
+      top = (data.results ?? []).slice(0, 5);
+    }
+    aeMem.set(canonName, top);
+    writeStore(`fdaae:${canonName}`, top);
+    return top;
+  });
 }

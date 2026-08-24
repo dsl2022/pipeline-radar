@@ -403,10 +403,17 @@ emitted as a metric.
   the default. So the common case — one question, three tools, same disease —
   has all three miss an empty cache in the same tick and each start its own
   registry request. It *looks* cached, because a sequential repeat test passes.
-  `data.ts` now stores the in-flight Promise and joins it, deleting the entry
-  on rejection so a failure is still never cached. **Any read-through cache
+  `data.ts` stores the in-flight Promise and joins it, deleting the entry on
+  rejection so a failure is still never cached. **Any read-through cache
   behind a tool needs single-flight, and its test needs `Promise.all`, not
   sequential awaits.**
+  The same shape was then found in the shared drug caches and fixed with one
+  primitive, `shared/src/single-flight.ts`: `resolveRxcui` (enrichTopRows runs
+  four workers and rows share aliases - reachable from an ordinary page load,
+  no agent involved), `fetchAllApps`, and `fetchTopReactions`. Residual, by
+  choice: two `badgeDrugs` batches that overlap only *partially* still both
+  run, because the batch is the request and splitting per drug would undo the
+  batching DATA-RESEARCH measured as necessary.
 - **Jest's `moduleNameMapper` redirects the runtime require, not TypeScript's
   type resolution.** The api workspace maps `@pipeline-radar/shared/*` to
   `shared/src/*`, so tests *run* against source — but `tsc` still resolves the

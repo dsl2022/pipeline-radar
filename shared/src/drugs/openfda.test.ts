@@ -244,3 +244,63 @@ describe('fetchTopReactions (AE drill-in)', () => {
     await expect(fetchTopReactions('ivonescimab')).resolves.toEqual([]);
   });
 });
+
+// Concurrency. Every cache here is written after its fetch resolves, so it
+// only ever helped callers arriving once a request had finished - which is not
+// how App.tsx (two overlapping badgeDrugs passes) or the agent's tool runner
+// (Promise.all over tool calls) behave.
+describe('concurrent lookups collapse into one request', () => {
+  it('runs one query for two identical badge batches in flight together', async () => {
+    const spy = mockFetch(() => ({
+      status: 200,
+      body: page([app('BLA125514', { generic: ['PEMBROLIZUMAB'], origAP: '20140904' })]),
+    }));
+
+    const [a, b] = await Promise.all([
+      collect([drugRow('Pembrolizumab')]),
+      collect([drugRow('Pembrolizumab')]),
+    ]);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(a.get('pembrolizumab')?.status).toBe('approved');
+    expect(b.get('pembrolizumab')?.status).toBe('approved');
+  });
+
+  it('runs one query for concurrent reaction lookups of the same drug', async () => {
+    const spy = mockFetch(() => ({
+      status: 200,
+      body: { results: [{ term: 'NAUSEA', count: 10 }, { term: 'FATIGUE', count: 5 }] },
+    }));
+
+    const results = await Promise.all([
+      fetchTopReactions('pembrolizumab'),
+      fetchTopReactions('pembrolizumab'),
+      fetchTopReactions('pembrolizumab'),
+    ]);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    for (const r of results) expect(r).toHaveLength(2);
+  });
+
+  it('still issues separate queries for different drugs', async () => {
+    const spy = mockFetch(() => ({ status: 200, body: { results: [] } }));
+    await Promise.all([fetchTopReactions('pembrolizumab'), fetchTopReactions('osimertinib')]);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  // A shared failure must not be remembered as a result.
+  it('fails every concurrent reaction caller, then retries cleanly', async () => {
+    const spy = mockFetch((_url, call) =>
+      call === 0 ? { status: 500, body: {} } : { status: 200, body: { results: [{ term: 'RASH', count: 3 }] } },
+    );
+
+    const settled = await Promise.allSettled([
+      fetchTopReactions('pembrolizumab'),
+      fetchTopReactions('pembrolizumab'),
+    ]);
+    expect(settled.every((r) => r.status === 'rejected')).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(await fetchTopReactions('pembrolizumab')).toEqual([{ term: 'RASH', count: 3 }]);
+  });
+});

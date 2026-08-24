@@ -1,4 +1,5 @@
 import { apiBase } from '../net';
+import { createInFlight } from '../single-flight';
 import { canon, isCategoryTerm, isResearchCode } from './canon';
 import type { DrugRow } from './cluster';
 
@@ -33,8 +34,13 @@ function writeStore(key: string, cui: string | null) {
   }
 }
 
+// enrichTopRows runs four workers in parallel and two rows can resolve to the
+// same alias, so same-name concurrent misses happen on an ordinary page load.
+const inFlight = createInFlight<string | null>();
+
 export function clearRxnormCache() {
   mem.clear();
+  inFlight.clear();
 }
 
 /** Resolve one canon'd name → RxCUI, or null on a definitive miss. Throws on HTTP/network errors. */
@@ -46,13 +52,15 @@ export async function resolveRxcui(canonName: string): Promise<string | null> {
     mem.set(canonName, stored);
     return stored;
   }
-  const res = await fetch(`${base()}?name=${encodeURIComponent(canonName)}&allsrc=1`);
-  if (!res.ok) throw new Error(`RxNorm returned ${res.status}`);
-  const data = (await res.json()) as { idGroup?: { rxnormId?: string[] } };
-  const cui = data.idGroup?.rxnormId?.[0] ?? null;
-  mem.set(canonName, cui);
-  writeStore(canonName, cui);
-  return cui;
+  return inFlight.join(canonName, async () => {
+    const res = await fetch(`${base()}?name=${encodeURIComponent(canonName)}&allsrc=1`);
+    if (!res.ok) throw new Error(`RxNorm returned ${res.status}`);
+    const data = (await res.json()) as { idGroup?: { rxnormId?: string[] } };
+    const cui = data.idGroup?.rxnormId?.[0] ?? null;
+    mem.set(canonName, cui);
+    writeStore(canonName, cui);
+    return cui;
+  });
 }
 
 // Brand-name fallback candidates, selected on the CANON form — raw brands arrive as
