@@ -52,17 +52,22 @@ export interface TurnInput {
 }
 
 /**
- * App state enters as a system-role message (MILESTONE-6-PLAN.md 6.5), never
- * as synthesized user text: it cannot be confused with something the user
- * said, and it sits after the frozen prefix so the cache is untouched. The
- * watchlist diff stays OUT - it can be large, and the diff_watchlist tool
- * fetches it just-in-time only when the conversation needs it.
+ * App state enters as a SECOND top-level system block, never as synthesized
+ * user text: it cannot be confused with something the user said. Not a
+ * system-role message in messages[] - the API rejects that shape at position
+ * 0 ("use the top-level 'system' parameter"), which is exactly where it lands
+ * on a first turn, when there is no history in front of it. Learned live.
+ *
+ * It sits AFTER the frozen block's cache breakpoint, so the cached prefix
+ * (tools + frozen prompt) is untouched by per-turn variation. The watchlist
+ * diff stays OUT - it can be large, and the diff_watchlist tool fetches it
+ * just-in-time only when the conversation needs it.
  */
-export function contextMessage(context: ChatContext): { role: 'system'; content: string } {
+export function contextBlock(context: ChatContext): { type: 'text'; text: string } {
   const { watchlistDiff, ...view } = context;
   return {
-    role: 'system',
-    content:
+    type: 'text',
+    text:
       'App state (for reference; set_view changes it): ' +
       JSON.stringify({ ...view, has_watchlist_diff: watchlistDiff !== undefined }),
   };
@@ -158,13 +163,12 @@ export function createAgentRunner(config: RunnerConfig) {
               // Array form with cache_control: the prompt and the tool block are
               // a frozen prefix, so every turn after the first reads them from
               // cache instead of paying full input price.
-              system: systemBlocks(),
+              system: [...systemBlocks(), ...(input.context ? [contextBlock(input.context)] : [])],
               // History precedes the question. It varies per turn, but it sits
               // after the cached prefix (tools -> system), so replaying it does
               // not disturb the cache the frozen prefix depends on.
               messages: [
                 ...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })),
-                ...(input.context ? [contextMessage(input.context)] : []),
                 { role: 'user', content: input.message },
               ],
               tools: config.tools,
