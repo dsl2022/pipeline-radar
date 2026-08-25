@@ -1,7 +1,8 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableTool';
-import type { ChatTurn } from '@pipeline-radar/shared/chat';
+import type { ChatContext, ChatTurn } from '@pipeline-radar/shared/chat';
 import { systemBlocks } from './prompt';
+import { runInTurnScope } from './turn-scope';
 
 // The turn. Everything that bounds one question's cost and wall clock is here.
 //
@@ -46,6 +47,25 @@ export type Emit = (event: string, data: unknown) => void;
 export interface TurnInput {
   message: string;
   history?: ChatTurn[];
+  /** The app state around the panel; reaches the model as an operator message. */
+  context?: ChatContext;
+}
+
+/**
+ * App state enters as a system-role message (MILESTONE-6-PLAN.md 6.5), never
+ * as synthesized user text: it cannot be confused with something the user
+ * said, and it sits after the frozen prefix so the cache is untouched. The
+ * watchlist diff stays OUT - it can be large, and the diff_watchlist tool
+ * fetches it just-in-time only when the conversation needs it.
+ */
+export function contextMessage(context: ChatContext): { role: 'system'; content: string } {
+  const { watchlistDiff, ...view } = context;
+  return {
+    role: 'system',
+    content:
+      'App state (for reference; set_view changes it): ' +
+      JSON.stringify({ ...view, has_watchlist_diff: watchlistDiff !== undefined }),
+  };
 }
 
 export interface RunOutcome {
@@ -125,67 +145,75 @@ export function createAgentRunner(config: RunnerConfig) {
       };
 
       try {
-        const runner = config.client.beta.messages.toolRunner(
-          {
-            model,
-            max_tokens: maxTokens,
-            // Array form with cache_control: the prompt and the tool block are
-            // a frozen prefix, so every turn after the first reads them from
-            // cache instead of paying full input price.
-            system: systemBlocks(),
-            // History precedes the question. It varies per turn, but it sits
-            // after the cached prefix (tools -> system), so replaying it does
-            // not disturb the cache the frozen prefix depends on.
-            messages: [
-              ...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })),
-              { role: 'user', content: input.message },
-            ],
-            tools: config.tools,
-            max_iterations: maxIterations,
-            // The default is "omitted", which streams empty thinking blocks -
-            // on screen that is an unexplained pause before any text appears.
-            thinking: { type: 'adaptive', display: 'summarized' },
-            output_config: { task_budget: { type: 'tokens', total: taskBudget } },
-            // A policy decline retries on a fallback model inside the same
-            // call rather than returning nothing.
-            fallbacks: 'default',
-            betas: [TASK_BUDGET_BETA, FALLBACK_BETA],
-            stream: true,
-          },
-          { signal: controller.signal },
-        );
+        // The copilot tools (set_view, prepare_brief, diff_watchlist) need
+        // this turn's context and its SSE emitter, and tool callbacks execute
+        // deep inside the SDK where neither can be threaded as arguments.
+        // AsyncLocalStorage scopes them to THIS turn - concurrent turns on one
+        // process do not see each other's browsers.
+        return await runInTurnScope({ context: input.context, emit }, async () => {
+          const runner = config.client.beta.messages.toolRunner(
+            {
+              model,
+              max_tokens: maxTokens,
+              // Array form with cache_control: the prompt and the tool block are
+              // a frozen prefix, so every turn after the first reads them from
+              // cache instead of paying full input price.
+              system: systemBlocks(),
+              // History precedes the question. It varies per turn, but it sits
+              // after the cached prefix (tools -> system), so replaying it does
+              // not disturb the cache the frozen prefix depends on.
+              messages: [
+                ...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })),
+                ...(input.context ? [contextMessage(input.context)] : []),
+                { role: 'user', content: input.message },
+              ],
+              tools: config.tools,
+              max_iterations: maxIterations,
+              // The default is "omitted", which streams empty thinking blocks -
+              // on screen that is an unexplained pause before any text appears.
+              thinking: { type: 'adaptive', display: 'summarized' },
+              output_config: { task_budget: { type: 'tokens', total: taskBudget } },
+              // A policy decline retries on a fallback model inside the same
+              // call rather than returning nothing.
+              fallbacks: 'default',
+              betas: [TASK_BUDGET_BETA, FALLBACK_BETA],
+              stream: true,
+            },
+            { signal: controller.signal },
+          );
 
-        for await (const stream of runner) {
-          outcome.iterations += 1;
-          stream.on('text', (delta) => emit('delta', { text: delta }));
-          stream.on('thinking', (delta) => emit('thinking', { text: delta }));
+          for await (const stream of runner) {
+            outcome.iterations += 1;
+            stream.on('text', (delta) => emit('delta', { text: delta }));
+            stream.on('thinking', (delta) => emit('thinking', { text: delta }));
 
-          const msg = await stream.finalMessage();
+            const msg = await stream.finalMessage();
 
-          outcome.usage.input += msg.usage.input_tokens ?? 0;
-          outcome.usage.output += msg.usage.output_tokens ?? 0;
-          outcome.usage.cacheRead += msg.usage.cache_read_input_tokens ?? 0;
-          outcome.usage.cacheCreation += msg.usage.cache_creation_input_tokens ?? 0;
-          outcome.stopReason = msg.stop_reason ?? null;
+            outcome.usage.input += msg.usage.input_tokens ?? 0;
+            outcome.usage.output += msg.usage.output_tokens ?? 0;
+            outcome.usage.cacheRead += msg.usage.cache_read_input_tokens ?? 0;
+            outcome.usage.cacheCreation += msg.usage.cache_creation_input_tokens ?? 0;
+            outcome.stopReason = msg.stop_reason ?? null;
 
-          for (const block of msg.content) {
-            if (block.type === 'tool_use') {
-              outcome.toolCalls.push(block.name);
-              // The name only. Tool inputs echo the user's question back, and
-              // this event is what the UI renders and what gets logged.
-              emit('tool', { name: block.name });
+            for (const block of msg.content) {
+              if (block.type === 'tool_use') {
+                outcome.toolCalls.push(block.name);
+                // The name only. Tool inputs echo the user's question back, and
+                // this event is what the UI renders and what gets logged.
+                emit('tool', { name: block.name });
+              }
+            }
+
+            // We ship no server tools, so pause_turn should not occur - but the
+            // runner does not auto-resume it, and an unhandled pause ends the
+            // loop looking exactly like a finished answer.
+            if (msg.stop_reason === 'pause_turn') {
+              runner.pushMessages({ role: 'assistant', content: msg.content });
             }
           }
 
-          // We ship no server tools, so pause_turn should not occur - but the
-          // runner does not auto-resume it, and an unhandled pause ends the
-          // loop looking exactly like a finished answer.
-          if (msg.stop_reason === 'pause_turn') {
-            runner.pushMessages({ role: 'assistant', content: msg.content });
-          }
-        }
-
-        return outcome;
+          return outcome;
+        });
       } catch (err) {
         if (controller.signal.aborted) {
           outcome.timedOut = timedOut;

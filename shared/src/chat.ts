@@ -61,6 +61,89 @@ export function boundHistory(turns: ChatTurn[]): ChatTurn[] {
   return out;
 }
 
+/**
+ * What the panel tells the agent about the app around it (PR 9, the copilot
+ * layer). All optional: a request with no context is a plain question. The
+ * watchlist diff is client-computed — the server holds no snapshots — and the
+ * model only narrates it, so it crosses the wire as bounded, validated data.
+ */
+export interface ChatContext {
+  disease?: string;
+  view?: 'trials' | 'drugs';
+  phases?: string[];
+  statuses?: string[];
+  /** Serialized LandscapeDiff for the current disease, if a watchlist exists. */
+  watchlistDiff?: unknown;
+}
+
+/** Ceiling on the serialized context, dominated by the watchlist diff. */
+export const MAX_CONTEXT_CHARS = 16_000;
+
+const MAX_FILTER_ITEMS = 12;
+const MAX_FIELD_CHARS = 120;
+
+export type ContextResult = { ok: true; value: ChatContext | undefined } | { ok: false; reason: string };
+
+function badField(name: string): ContextResult {
+  return { ok: false, reason: `context ${name} is invalid` };
+}
+
+function validStrings(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length <= MAX_FILTER_ITEMS &&
+    value.every((s) => typeof s === 'string' && s.length > 0 && s.length <= MAX_FIELD_CHARS && !hasControlChars(s))
+  );
+}
+
+export function validateContext(value: unknown): ContextResult {
+  if (value === undefined) return { ok: true, value: undefined };
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { ok: false, reason: 'context must be an object' };
+  }
+  const c = value as Record<string, unknown>;
+
+  const out: ChatContext = {};
+  if (c.disease !== undefined) {
+    if (typeof c.disease !== 'string' || c.disease.length === 0 || c.disease.length > MAX_FIELD_CHARS || hasControlChars(c.disease)) {
+      return badField('disease');
+    }
+    out.disease = c.disease;
+  }
+  if (c.view !== undefined) {
+    if (c.view !== 'trials' && c.view !== 'drugs') return badField('view');
+    out.view = c.view;
+  }
+  if (c.phases !== undefined) {
+    if (!validStrings(c.phases)) return badField('phases');
+    out.phases = c.phases;
+  }
+  if (c.statuses !== undefined) {
+    if (!validStrings(c.statuses)) return badField('statuses');
+    out.statuses = c.statuses;
+  }
+  if (c.watchlistDiff !== undefined) {
+    let text: string;
+    try {
+      text = JSON.stringify(c.watchlistDiff);
+    } catch {
+      return badField('watchlistDiff');
+    }
+    if (typeof text !== 'string' || hasControlChars(text)) return badField('watchlistDiff');
+    if (text.length > MAX_CONTEXT_CHARS) {
+      return { ok: false, reason: `context exceeds ${MAX_CONTEXT_CHARS} characters` };
+    }
+    out.watchlistDiff = c.watchlistDiff;
+  }
+
+  // The whole thing must fit, not just the diff: twelve 120-char filters
+  // should not smuggle past the ceiling the diff respects.
+  if (JSON.stringify(out).length > MAX_CONTEXT_CHARS) {
+    return { ok: false, reason: `context exceeds ${MAX_CONTEXT_CHARS} characters` };
+  }
+  return { ok: true, value: Object.keys(out).length > 0 ? out : undefined };
+}
+
 export type HistoryResult = { ok: true; value: ChatTurn[] } | { ok: false; reason: string };
 
 /**

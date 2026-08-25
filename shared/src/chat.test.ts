@@ -1,9 +1,11 @@
 import {
+  MAX_CONTEXT_CHARS,
   MAX_HISTORY_ITEM_CHARS,
   MAX_HISTORY_TOTAL_CHARS,
   MAX_HISTORY_TURNS,
   boundHistory,
   hasControlChars,
+  validateContext,
   validateHistory,
   type ChatTurn,
 } from './chat';
@@ -131,5 +133,42 @@ describe('hasControlChars', () => {
     expect(hasControlChars('a\u0000b')).toBe(true);
     expect(hasControlChars('a\u007Fb')).toBe(true);
     expect(hasControlChars('a\u009Bb')).toBe(true);
+  });
+});
+
+describe('validateContext', () => {
+  it('treats absence as no context', () => {
+    expect(validateContext(undefined)).toEqual({ ok: true, value: undefined });
+  });
+
+  it('accepts a well-formed context', () => {
+    const res = validateContext({ disease: 'melanoma', view: 'drugs', phases: ['PHASE3'], statuses: [] });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.value).toEqual({ disease: 'melanoma', view: 'drugs', phases: ['PHASE3'], statuses: [] });
+  });
+
+  it('collapses an empty object to no context', () => {
+    expect(validateContext({})).toEqual({ ok: true, value: undefined });
+  });
+
+  it.each([
+    ['a non-object', 'melanoma'],
+    ['an array', []],
+    ['an unknown view', { view: 'dashboard' }],
+    ['an over-long disease', { disease: 'x'.repeat(121) }],
+    ['control characters in the disease', { disease: 'mel\u0007anoma' }],
+    ['a non-string filter entry', { phases: [42] }],
+    ['too many filter entries', { phases: Array.from({ length: 13 }, (_, i) => `P${i}`) }],
+  ])('rejects %s', (_name, value) => {
+    expect(validateContext(value).ok).toBe(false);
+  });
+
+  it('rejects a watchlist diff over the budget and accepts one inside it', () => {
+    const big = { rows: 'x'.repeat(MAX_CONTEXT_CHARS) };
+    expect(validateContext({ watchlistDiff: big }).ok).toBe(false);
+    const small = { hasChanges: true, added: [{ drug: 'examplemab' }] };
+    const res = validateContext({ watchlistDiff: small });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.value?.watchlistDiff).toEqual(small);
   });
 });

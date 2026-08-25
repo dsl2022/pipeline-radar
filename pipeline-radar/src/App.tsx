@@ -21,6 +21,7 @@ import { diffSnapshots, loadSnapshot, makeSnapshot, saveSnapshot, type Snapshot 
 import { ExportBar } from './ExportBar';
 import { WatchlistDiff } from './WatchlistDiff';
 import { ChatPanel } from './ChatPanel';
+import { applyViewCommand, type ViewState } from './chat/viewCommand';
 import type { Trial } from '@pipeline-radar/shared/types';
 import './App.css';
 
@@ -85,8 +86,8 @@ export default function App() {
   // reactive, so the loaded snapshot lives in state: refreshed on search, on save.
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
-  async function search() {
-    const disease = query.trim();
+  async function search(diseaseArg?: string) {
+    const disease = (diseaseArg ?? query).trim();
     if (!disease) return;
     setState({ kind: 'loading' });
     setSelectedPhases([]);
@@ -402,7 +403,34 @@ export default function App() {
         </>
       )}
 
-      <ChatPanel />
+      <ChatPanel
+        app={{
+          disease: state.kind === 'results' ? state.disease : undefined,
+          view,
+          phases: selectedPhases,
+          statuses: selectedStatuses,
+          watchlistDiff: watchDiff,
+        }}
+        onViewCommand={(command) => {
+          const current: ViewState = {
+            disease: state.kind === 'results' ? state.disease : '',
+            view,
+            phases: selectedPhases,
+            statuses: selectedStatuses,
+          };
+          const applied = applyViewCommand(current, command);
+          if (!applied.changed) return;
+          if (applied.searchNeeded) {
+            // search() clears the filter state synchronously, so it runs
+            // before the command's own filters are applied below.
+            setQuery(applied.state.disease);
+            search(applied.state.disease);
+          }
+          setView(applied.state.view);
+          setSelectedPhases(applied.state.phases);
+          setSelectedStatuses(applied.state.statuses);
+        }}
+      />
     </main>
   );
 }

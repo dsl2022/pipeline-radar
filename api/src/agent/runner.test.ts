@@ -169,6 +169,27 @@ describe('conversation history', () => {
     await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit);
     expect(captured.params!.messages).toEqual([{ role: 'user', content: 'q' }]);
   });
+
+  // App state rides as a system-role message (6.5): non-spoofable, after the
+  // cached prefix, and never the large watchlist diff - that stays behind the
+  // diff_watchlist tool.
+  it('carries app context as a system message before the question, without the diff', async () => {
+    const { client, captured } = fakeClient([{ text: 'hi' }]);
+    await createAgentRunner({ client, tools: [] }).run(
+      {
+        message: 'what changed?',
+        context: { disease: 'melanoma', view: 'drugs', watchlistDiff: { added: ['secret-drug-name'] } },
+      },
+      collect().emit,
+    );
+    const messages = captured.params!.messages as { role: string; content: string }[];
+    expect(messages).toHaveLength(2);
+    expect(messages[0].role).toBe('system');
+    expect(messages[0].content).toContain('"disease":"melanoma"');
+    expect(messages[0].content).toContain('"has_watchlist_diff":true');
+    expect(messages[0].content).not.toContain('secret-drug-name');
+    expect(messages[1]).toEqual({ role: 'user', content: 'what changed?' });
+  });
 });
 
 describe('streaming a turn', () => {

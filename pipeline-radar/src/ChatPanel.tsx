@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { MAX_MESSAGE_CHARS } from '@pipeline-radar/shared/chat';
 import { createSseParser } from './chat/sse';
 import { nctUrl, parseMarkdown, type Block, type Inline } from './chat/markdown';
-import { applyEvent, emptyAssistant, historyFrom, type AssistantMsg, type Msg } from './chat/turns';
+import { buildChatContext, type AppSnapshot } from './chat/context';
+import { applyEvent, emptyAssistant, historyFrom, type AssistantMsg, type BriefCard, type Msg } from './chat/turns';
 
 // The chat surface for the agent (MILESTONE-6-PR-PLAN.md PR 8). Hand-rolled
 // rather than a component library: zero new dependencies, and the panel owns
@@ -13,8 +14,15 @@ import { applyEvent, emptyAssistant, historyFrom, type AssistantMsg, type Msg } 
 // history sent with each question comes from historyFrom(), so a turn the
 // server refused or that errored is never replayed.
 
+export interface ChatPanelProps {
+  /** What the user currently sees; sent as request context for the copilot. */
+  app?: AppSnapshot;
+  /** Applies a set_view command the agent sent. Absent = commands are dropped. */
+  onViewCommand?: (command: unknown) => void;
+}
+
 /** Follow-up questions ride on prior turns; see shared/chat.ts for bounds. */
-export function ChatPanel() {
+export function ChatPanel({ app, onViewCommand }: ChatPanelProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState('');
@@ -66,7 +74,11 @@ export function ChatPanel() {
       const res = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ message: question, history }),
+        body: JSON.stringify({
+          message: question,
+          history,
+          ...(app ? { context: buildChatContext(app) } : {}),
+        }),
         signal: ctrl.signal,
       });
 
@@ -75,7 +87,15 @@ export function ChatPanel() {
         return;
       }
 
-      const parser = createSseParser((ev) => patchLive((m) => applyEvent(m, ev)));
+      const parser = createSseParser((ev) => {
+        // view commands steer the app, not the transcript; everything else
+        // folds into the streaming message.
+        if (ev.event === 'view') {
+          onViewCommand?.(ev.data);
+          return;
+        }
+        patchLive((m) => applyEvent(m, ev));
+      });
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       for (;;) {
@@ -184,7 +204,66 @@ const TOOL_LABELS: Record<string, string> = {
   summarize_trials: 'Summarizing',
   build_drug_landscape: 'Building drug landscape',
   check_fda_approval: 'Checking FDA status',
+  get_trial_detail: 'Reading trial record',
+  get_adverse_events: 'Checking adverse events',
+  pubmed_count: 'Counting publications',
+  diff_watchlist: 'Reading watchlist changes',
+  set_view: 'Updating the view',
+  prepare_brief: 'Preparing brief',
 };
+
+/**
+ * The second phase of the two-phase brief: the download happens only on this
+ * click, sending back the exact content and the token the server minted over
+ * it. A modified preview or a stale token gets a 403, not a file.
+ */
+function BriefCardView({ brief }: { brief: BriefCard }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+
+  async function download() {
+    setState('busy');
+    try {
+      const res = await fetch('/api/agent/brief/commit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ content: brief.markdown, token: brief.token, filename: brief.filename }),
+      });
+      if (!res.ok) {
+        setState('error');
+        return;
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = brief.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      setState('done');
+    } catch {
+      setState('error');
+    }
+  }
+
+  return (
+    <div className="chat-brief">
+      <div className="chat-brief-head">
+        <span className="chat-brief-name">{brief.filename}</span>
+        <button type="button" onClick={download} disabled={state === 'busy'}>
+          {state === 'busy' ? 'Preparing…' : state === 'done' ? 'Download again' : 'Download'}
+        </button>
+      </div>
+      {state === 'error' && (
+        <p className="chat-error">The download was refused — ask for the brief again to get a fresh preview.</p>
+      )}
+      <details>
+        <summary>Preview</summary>
+        <div className="chat-brief-preview">
+          <Markdown text={brief.markdown} />
+        </div>
+      </details>
+    </div>
+  );
+}
 
 function AssistantBubble({ msg }: { msg: AssistantMsg }) {
   return (
@@ -203,6 +282,7 @@ function AssistantBubble({ msg }: { msg: AssistantMsg }) {
       ) : msg.streaming ? (
         <p className="chat-waiting">{msg.thinking ? 'Thinking…' : 'Working…'}</p>
       ) : null}
+      {msg.brief && <BriefCardView brief={msg.brief} />}
       {msg.notice && <p className="chat-notice">{msg.notice}</p>}
       {msg.error && <p className="chat-error">{msg.error}</p>}
     </div>

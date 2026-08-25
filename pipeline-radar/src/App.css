@@ -885,3 +885,60 @@ td.tested {
   opacity: 0.6;
   cursor: default;
 }
+
+/* Milestone 6 PR 9: brief preview card */
+
+.chat-brief {
+  margin-top: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  background: #fff;
+}
+
+.chat-brief-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chat-brief-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.chat-brief-head button {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.82rem;
+  border: none;
+  border-radius: 6px;
+  background: #1a56db;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chat-brief-head button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.chat-brief details {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.chat-brief summary {
+  cursor: pointer;
+  color: #1a56db;
+}
+
+.chat-brief-preview {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #e5e7eb;
+}

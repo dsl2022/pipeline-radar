@@ -10,6 +10,13 @@ export interface UserMsg {
   text: string;
 }
 
+/** A prepared brief: preview + the commit token the model never saw. */
+export interface BriefCard {
+  filename: string;
+  markdown: string;
+  token: string;
+}
+
 export interface AssistantMsg {
   role: 'assistant';
   text: string;
@@ -17,6 +24,7 @@ export interface AssistantMsg {
   tools: string[];
   notice?: string;
   error?: string;
+  brief?: BriefCard;
   streaming: boolean;
 }
 
@@ -38,6 +46,11 @@ export function applyEvent(msg: AssistantMsg, ev: SseEvent): AssistantMsg {
       return d.name ? { ...msg, tools: [...msg.tools, d.name] } : msg;
     case 'notice':
       return { ...msg, notice: d.text };
+    case 'brief': {
+      const b = ev.data as { filename?: string; markdown?: string; token?: string };
+      if (typeof b?.markdown !== 'string' || typeof b?.token !== 'string') return msg;
+      return { ...msg, brief: { filename: b.filename ?? 'brief.md', markdown: b.markdown, token: b.token } };
+    }
     case 'error':
       return { ...msg, error: d.message ?? 'the assistant could not finish this turn' };
     case 'done':
