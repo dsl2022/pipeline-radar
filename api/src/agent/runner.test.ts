@@ -170,10 +170,12 @@ describe('conversation history', () => {
     expect(captured.params!.messages).toEqual([{ role: 'user', content: 'q' }]);
   });
 
-  // App state rides as a system-role message (6.5): non-spoofable, after the
-  // cached prefix, and never the large watchlist diff - that stays behind the
-  // diff_watchlist tool.
-  it('carries app context as a system message before the question, without the diff', async () => {
+  // App state rides as a second top-level system block: non-spoofable, after
+  // the frozen block's cache breakpoint, and never the large watchlist diff -
+  // that stays behind the diff_watchlist tool. NOT a system-role message in
+  // messages[]: the API 400s on that shape at position 0, which is where it
+  // lands on every first turn.
+  it('carries app context as an uncached system block, without the diff', async () => {
     const { client, captured } = fakeClient([{ text: 'hi' }]);
     await createAgentRunner({ client, tools: [] }).run(
       {
@@ -182,13 +184,26 @@ describe('conversation history', () => {
       },
       collect().emit,
     );
+    const system = captured.params!.system as { text: string; cache_control?: unknown }[];
+    expect(system).toHaveLength(2);
+    expect(system[0].cache_control).toEqual({ type: 'ephemeral' }); // the frozen prefix still ends the cache
+    expect(system[1].cache_control).toBeUndefined();
+    expect(system[1].text).toContain('"disease":"melanoma"');
+    expect(system[1].text).toContain('"has_watchlist_diff":true');
+    expect(system[1].text).not.toContain('secret-drug-name');
+
     const messages = captured.params!.messages as { role: string; content: string }[];
-    expect(messages).toHaveLength(2);
-    expect(messages[0].role).toBe('system');
-    expect(messages[0].content).toContain('"disease":"melanoma"');
-    expect(messages[0].content).toContain('"has_watchlist_diff":true');
-    expect(messages[0].content).not.toContain('secret-drug-name');
-    expect(messages[1]).toEqual({ role: 'user', content: 'what changed?' });
+    expect(messages).toEqual([{ role: 'user', content: 'what changed?' }]);
+  });
+
+  it('keeps the user message first in messages even with context on a first turn', async () => {
+    const { client, captured } = fakeClient([{ text: 'hi' }]);
+    await createAgentRunner({ client, tools: [] }).run(
+      { message: 'q', context: { view: 'trials' } },
+      collect().emit,
+    );
+    const messages = captured.params!.messages as { role: string }[];
+    expect(messages[0].role).toBe('user');
   });
 });
 
