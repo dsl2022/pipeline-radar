@@ -513,3 +513,23 @@ describe('prepare_brief', () => {
     expect(out.status).toBe('unavailable');
   });
 });
+
+describe('citation capture at the tool boundary', () => {
+  it('records every NCT ID a tool result surfaces against the turn', async () => {
+    const known = new Set<string>();
+    const { emit } = collectEmit();
+    await callInScope(
+      stubData({ trials: [trial({ nctId: 'NCT07654321' })] }),
+      'search_trials',
+      { condition: 'melanoma' },
+      { knownNctIds: known, emit } as never,
+    );
+    expect(known.has('NCT07654321')).toBe(true);
+  });
+
+  it('leaves the turn untouched when no scope is active', async () => {
+    // Outside a turn (evals, direct calls) the tool still works.
+    const out = await call(stubData({ trials: [trial()] }), 'search_trials', { condition: 'melanoma' });
+    expect(out.rows).toHaveLength(1);
+  });
+});

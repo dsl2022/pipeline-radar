@@ -942,3 +942,15 @@ td.tested {
   padding-top: 0.4rem;
   border-top: 1px solid #e5e7eb;
 }
+
+/* Milestone 6 PR 10: unverified citation flag */
+
+.chat-nct-unverified {
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 0 0.3em;
+  font-weight: 600;
+  text-decoration: underline wavy #d97706 1px;
+  cursor: help;
+}

@@ -207,6 +207,43 @@ describe('conversation history', () => {
   });
 });
 
+describe('citation checking', () => {
+  // No tools run in these fakes, so nothing vouches for any ID: what is
+  // exercised is the runner-side check, seeding, and the event.
+  it('flags an ID nothing in the session vouches for', async () => {
+    const { client } = fakeClient([{ text: 'The key study is NCT09999999.' }]);
+    const { events, emit } = collect();
+    const out = await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, emit);
+    expect(events).toContainEqual({ event: 'citations', data: { unverified: ['NCT09999999'] } });
+    expect(out.citations).toEqual({ cited: 1, unverified: 1 });
+  });
+
+  it('does not flag an ID the history already carried', async () => {
+    const { client } = fakeClient([{ text: 'As noted, NCT01111111 leads.' }]);
+    const { events, emit } = collect();
+    const out = await createAgentRunner({ client, tools: [] }).run(
+      {
+        message: 'and the sponsor?',
+        history: [
+          { role: 'user', text: 'largest trial?' },
+          { role: 'assistant', text: 'NCT01111111, by enrolment.' },
+        ],
+      },
+      emit,
+    );
+    expect(events.filter((e) => e.event === 'citations')).toEqual([]);
+    expect(out.citations).toEqual({ cited: 1, unverified: 0 });
+  });
+
+  it('emits nothing for a reply with no IDs', async () => {
+    const { client } = fakeClient([{ text: 'There are 409 distinct drugs.' }]);
+    const { events, emit } = collect();
+    const out = await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, emit);
+    expect(events.filter((e) => e.event === 'citations')).toEqual([]);
+    expect(out.citations).toEqual({ cited: 0, unverified: 0 });
+  });
+});
+
 describe('streaming a turn', () => {
   it('emits text deltas as they arrive', async () => {
     const { client } = fakeClient([{ text: 'the answer' }]);

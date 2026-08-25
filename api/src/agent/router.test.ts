@@ -25,6 +25,7 @@ const stubRunner = (over: Partial<RunOutcome> = {}): AgentRunner => ({
       iterations: 1,
       toolCalls: [],
       timedOut: false,
+      citations: { cited: 0, unverified: 0 },
       usage: { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 },
       ...over,
     };

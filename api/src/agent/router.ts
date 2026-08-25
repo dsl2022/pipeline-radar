@@ -182,6 +182,9 @@ export function createAgentRouter(config: AgentConfig): Router {
             timed_out: outcome.timedOut,
             iterations: outcome.iterations,
             tools: outcome.toolCalls,
+            // The eval signal (6.4): unverified > 0 is the highest-priority
+            // failure this log can carry, and the rate feeds the golden set.
+            citations: outcome.citations,
             usage: outcome.usage,
             ms: Date.now() - startedAt,
           }),

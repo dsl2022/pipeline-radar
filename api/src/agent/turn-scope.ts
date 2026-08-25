@@ -15,6 +15,12 @@ import type { Emit } from './runner';
 export interface TurnScope {
   context?: ChatContext;
   emit: Emit;
+  /**
+   * Every NCT ID a tool result has surfaced this turn (plus what the history
+   * and context already contained). The citation checker holds the reply to
+   * this set - an ID outside it is flagged as unverified.
+   */
+  knownNctIds?: Set<string>;
 }
 
 const storage = new AsyncLocalStorage<TurnScope>();

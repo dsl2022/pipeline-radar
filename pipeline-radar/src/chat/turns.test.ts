@@ -49,6 +49,17 @@ describe('applyEvent', () => {
     expect(malformed.brief).toBeUndefined();
   });
 
+  it('records unverified citations, ignoring malformed payloads', () => {
+    const flagged = applyEvent(emptyAssistant(), {
+      event: 'citations',
+      data: { unverified: ['NCT09999999'] },
+    });
+    expect(flagged.unverified).toEqual(['NCT09999999']);
+
+    const malformed = applyEvent(emptyAssistant(), { event: 'citations', data: { unverified: 'nope' } });
+    expect(malformed.unverified).toBeUndefined();
+  });
+
   it('marks the message finished on done', () => {
     const m = applyEvent(emptyAssistant(), { event: 'done', data: { stop: 'end_turn' } });
     expect(m.streaming).toBe(false);
