@@ -337,13 +337,19 @@ data "aws_iam_policy_document" "deploy" {
       "sns:GetTopicAttributes", "sns:Subscribe", "sns:Unsubscribe",
       "sns:ListSubscriptionsByTopic", "sns:TagResource", "sns:UntagResource",
       "sns:ListTagsForResource",
-      # The provider polls the SUBSCRIPTION while confirming it - the denial
-      # named only this action, one apply after everything above sufficed.
-      # Same lesson as WAF: an IAM error names a failing action, not all of
-      # them.
-      "sns:GetSubscriptionAttributes", "sns:SetSubscriptionAttributes",
     ]
     resources = ["arn:${data.aws_partition.current.partition}:sns:*:${data.aws_caller_identity.current.account_id}:${var.project}-*"]
+  }
+
+  # Subscription-attribute actions do not honor topic-name resource patterns:
+  # simulate-principal-policy against the real subscription ARN returns
+  # implicitDeny under `${project}-*` and allows only under `*`. Verified
+  # empirically after the scoped grant failed a live apply - the actions
+  # return subscription metadata, never message content.
+  statement {
+    effect    = "Allow"
+    actions   = ["sns:GetSubscriptionAttributes", "sns:SetSubscriptionAttributes"]
+    resources = ["*"]
   }
 
   statement {
