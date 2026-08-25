@@ -27,7 +27,7 @@ variable "image_tag" {
 # break on a secret that does not exist yet.
 variable "langfuse_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Wire Langfuse tracing keys from Secrets Manager into the task"
 }
 
