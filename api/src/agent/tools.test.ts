@@ -21,8 +21,12 @@ const trial = (over: Partial<Trial> = {}): Trial => ({
   ...over,
 });
 
-const stubData = (set: Partial<TrialSet> & { trials: Trial[] }): TrialData => ({
+const stubData = (
+  set: Partial<TrialSet> & { trials: Trial[] },
+  detail: unknown = {},
+): TrialData => ({
   search: async () => ({ total: set.trials.length, sampled: false, ...set }),
+  detail: async () => detail,
 });
 
 const toolsFor = (data: TrialData) => {
@@ -42,12 +46,18 @@ const call = async (data: TrialData, name: string, input: unknown) => {
 describe('tool surface', () => {
   const tools = createTools(stubData({ trials: [] }));
 
-  it('exposes exactly the four read tools, in a stable order', () => {
+  it('exposes exactly the ten tools, in a stable order', () => {
     expect(tools.map((t) => t.name)).toEqual([
       'search_trials',
       'summarize_trials',
       'build_drug_landscape',
       'check_fda_approval',
+      'get_trial_detail',
+      'get_adverse_events',
+      'pubmed_count',
+      'diff_watchlist',
+      'set_view',
+      'prepare_brief',
     ]);
   });
 
@@ -58,7 +68,18 @@ describe('tool surface', () => {
     expect(JSON.stringify(again)).toBe(JSON.stringify(tools));
   });
 
-  it.each(['search_trials', 'summarize_trials', 'build_drug_landscape', 'check_fda_approval'])(
+  it.each([
+    'search_trials',
+    'summarize_trials',
+    'build_drug_landscape',
+    'check_fda_approval',
+    'get_trial_detail',
+    'get_adverse_events',
+    'pubmed_count',
+    'diff_watchlist',
+    'set_view',
+    'prepare_brief',
+  ])(
     '%s is strict and refuses unknown properties',
     (name) => {
       const tool = tools.find((t) => t.name === name)! as unknown as BetaTool;
@@ -185,7 +206,7 @@ describe('search_trials', () => {
   // does not say so is wrong in a way the reader cannot detect.
   it('declares sampling when the registry holds more than was fetched', async () => {
     const out = await call(
-      { search: async () => ({ trials: many, total: 4000, sampled: true }) },
+      { search: async () => ({ trials: many, total: 4000, sampled: true }), detail: async () => ({}) },
       'search_trials',
       { condition: 'lung cancer' },
     );
@@ -327,5 +348,168 @@ describe('check_fda_approval', () => {
   it('rejects a name that canonicalises to nothing', async () => {
     const out = await call(data, 'check_fda_approval', { drug: '...' });
     expect(out.status).toBe('unknown');
+  });
+});
+
+// --- the copilot layer (PR 9) ------------------------------------------------
+
+import { runInTurnScope } from './turn-scope';
+import { verifyBriefToken } from './brief';
+import type { Pubmed } from './pubmed';
+
+const collectEmit = () => {
+  const events: { event: string; data: unknown }[] = [];
+  return { events, emit: (event: string, data: unknown) => events.push({ event, data }) };
+};
+
+const callInScope = async (
+  data: TrialData,
+  name: string,
+  input: unknown,
+  scope: { context?: Record<string, unknown>; emit: (e: string, d: unknown) => void },
+  extras: Parameters<typeof createTools>[1] = {},
+) => {
+  const tool = createTools(data, extras).find((t) => t.name === name)!;
+  return runInTurnScope(scope as never, async () => JSON.parse((await tool.run(input as never)) as string));
+};
+
+describe('get_trial_detail', () => {
+  it('shapes the protocol section and refuses malformed IDs at the schema', async () => {
+    const detail = {
+      protocolSection: {
+        identificationModule: { briefTitle: 'A deep study' },
+        statusModule: { overallStatus: 'RECRUITING', startDateStruct: { date: '2025-01' } },
+        designModule: { phases: ['PHASE3'], enrollmentInfo: { count: 420 }, studyType: 'INTERVENTIONAL' },
+        sponsorCollaboratorsModule: { leadSponsor: { name: 'Acme Onc' } },
+        descriptionModule: { briefSummary: 'Why this trial exists.' },
+        armsInterventionsModule: { interventions: [{ type: 'DRUG', name: 'examplemab', description: 'the drug' }] },
+      },
+    };
+    const out = await call(stubData({ trials: [] }, detail), 'get_trial_detail', { nct_id: 'NCT01234567' });
+    expect(out.title).toBe('A deep study');
+    expect(out.phases).toEqual(['PHASE3']);
+    expect(out.enrollment).toBe(420);
+    expect(out.rows).toEqual([{ type: 'DRUG', name: 'examplemab', description: 'the drug' }]);
+
+    const tool = createTools(stubData({ trials: [] }))!.find((t) => t.name === 'get_trial_detail')!;
+    expect(() => tool.parse({ nct_id: 'NCT123' })).toThrow();
+    expect(() => tool.parse({ nct_id: 'https://evil.example.com' })).toThrow();
+  });
+});
+
+describe('get_adverse_events', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    clearFdaCache();
+  });
+
+  it('returns report counts with the incidence caveat', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ results: [{ term: 'NAUSEA', count: 12 }] }), { status: 200 }) as never,
+    );
+    const out = await call(stubData({ trials: [] }), 'get_adverse_events', { drug: 'examplemab' });
+    expect(out.rows).toEqual([{ reaction: 'NAUSEA', reports: 12 }]);
+    expect(out.caveat).toMatch(/not incidence/i);
+  });
+});
+
+describe('pubmed_count', () => {
+  it('reports the count from the pubmed client', async () => {
+    const pubmed: Pubmed = { count: async () => 1234 };
+    const out = await call(
+      { ...stubData({ trials: [] }) },
+      'pubmed_count',
+      { term: 'examplemab AND melanoma' },
+    ).catch(() => null);
+    // Without extras the tool must say so rather than guessing.
+    expect(out.status).toBe('unavailable');
+
+    const tool = createTools(stubData({ trials: [] }), { pubmed }).find((t) => t.name === 'pubmed_count')!;
+    const withClient = JSON.parse((await tool.run({ term: 'examplemab' } as never)) as string);
+    expect(withClient.article_count).toBe(1234);
+  });
+});
+
+describe('diff_watchlist', () => {
+  it('returns the client-supplied diff from the turn scope', async () => {
+    const { emit } = collectEmit();
+    const out = await callInScope(
+      stubData({ trials: [] }),
+      'diff_watchlist',
+      {},
+      { context: { watchlistDiff: { has_changes: true, added: ['x'] } }, emit },
+    );
+    expect(out.status).toBe('ok');
+    expect(out.diff).toEqual({ has_changes: true, added: ['x'] });
+  });
+
+  it('says no_watchlist when the turn carries none', async () => {
+    const out = await call(stubData({ trials: [] }), 'diff_watchlist', {});
+    expect(out.status).toBe('no_watchlist');
+  });
+});
+
+describe('set_view', () => {
+  it('forwards the command to the browser and reports what was applied', async () => {
+    const { events, emit } = collectEmit();
+    const out = await callInScope(
+      stubData({ trials: [] }),
+      'set_view',
+      { view: 'drugs', phases: ['PHASE3'] },
+      { emit },
+    );
+    expect(out).toEqual({ status: 'applied', applied: { view: 'drugs', phases: ['PHASE3'] } });
+    expect(events).toEqual([{ event: 'view', data: { view: 'drugs', phases: ['PHASE3'] } }]);
+  });
+
+  it('does nothing on an empty command', async () => {
+    const { events, emit } = collectEmit();
+    const out = await callInScope(stubData({ trials: [] }), 'set_view', {}, { emit });
+    expect(out.status).toBe('noop');
+    expect(events).toEqual([]);
+  });
+});
+
+describe('prepare_brief', () => {
+  const SECRET = 'brief-secret';
+  const T0 = 1_756_000_000_000;
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    clearFdaCache();
+  });
+
+  it('sends the preview and token to the browser, never to the model', async () => {
+    // openFDA badge lookups inside the brief resolve to "no record".
+    jest.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 404 }) as never);
+
+    const { events, emit } = collectEmit();
+    const out = await callInScope(
+      stubData({ trials: [trial()] }),
+      'prepare_brief',
+      { condition: 'melanoma' },
+      { emit },
+      { briefSecret: SECRET, now: () => T0 },
+    );
+
+    expect(out.status).toBe('preview_shown');
+    expect(JSON.stringify(out)).not.toContain('token');
+
+    const brief = events.find((e) => e.event === 'brief')!.data as {
+      filename: string;
+      markdown: string;
+      token: string;
+    };
+    expect(brief.filename).toMatch(/\.md$/);
+    expect(brief.markdown).toMatch(/melanoma/i);
+    // The token the browser got commits exactly this content.
+    expect(verifyBriefToken(brief.markdown, brief.token, SECRET, T0)).toBe(true);
+    expect(verifyBriefToken(brief.markdown + 'x', brief.token, SECRET, T0)).toBe(false);
+  });
+
+  it('reports itself unavailable without a signing secret', async () => {
+    const { emit } = collectEmit();
+    const out = await callInScope(stubData({ trials: [trial()] }), 'prepare_brief', { condition: 'melanoma' }, { emit });
+    expect(out.status).toBe('unavailable');
   });
 });

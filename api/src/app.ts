@@ -6,6 +6,7 @@ import { createAgentRouter } from './agent/router';
 import { createLimiter, type Limiter } from './agent/limits';
 import { createDynamoStore, createMemoryStore } from './agent/store';
 import { createTrialData } from './agent/data';
+import { createPubmed } from './agent/pubmed';
 import { createTools } from './agent/tools';
 import { createAgentRunner, type AgentRunner } from './agent/runner';
 
@@ -40,6 +41,9 @@ export const UPSTREAMS: Upstream[] = [
   { prefix: '/api/ctgov', target: 'https://clinicaltrials.gov/api', ttlMs: 10 * 60_000 },
   { prefix: '/api/openfda', target: 'https://api.fda.gov', ttlMs: 24 * 60 * 60_000 },
   { prefix: '/api/rxnorm', target: 'https://rxnav.nlm.nih.gov/REST', ttlMs: 24 * 60 * 60_000 },
+  // PubMed article counts for the agent's pubmed_count tool (M6). Counts move
+  // slowly; a day-long cache keeps the 3 req/s eutils courtesy limit distant.
+  { prefix: '/api/pubmed', target: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils', ttlMs: 24 * 60 * 60_000 },
 ];
 
 const UPSTREAM_TIMEOUT_MS = 15_000;
@@ -85,7 +89,7 @@ export function createApp(
         sessionSecret,
         allowedOrigins: options.allowedOrigins ?? allowedOriginsFromEnv(),
         limiter: options.limiter ?? defaultLimiter(),
-        runner: options.runner ?? defaultRunner(options.selfBaseUrl),
+        runner: options.runner ?? defaultRunner(sessionSecret, options.selfBaseUrl),
       }),
     );
   } else {
@@ -145,7 +149,7 @@ function allowedOriginsFromEnv(): string[] {
  * exactly like a working assistant to everyone except the person who needs to
  * know the key is missing.
  */
-function defaultRunner(selfBaseUrl?: string): AgentRunner | undefined {
+function defaultRunner(sessionSecret: string, selfBaseUrl?: string): AgentRunner | undefined {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn('ANTHROPIC_API_KEY unset - agent chat will answer 503');
     return undefined;
@@ -157,7 +161,12 @@ function defaultRunner(selfBaseUrl?: string): AgentRunner | undefined {
   setApiBase(selfBaseUrl ?? `http://127.0.0.1:${servicePort()}/api`);
 
   const client = new Anthropic();
-  return createAgentRunner({ client, tools: createTools(createTrialData()) });
+  // The session secret doubles as the brief-token key: same trust domain (one
+  // service, one secret store), and the tokens are 10-minute, single-purpose.
+  return createAgentRunner({
+    client,
+    tools: createTools(createTrialData(), { pubmed: createPubmed(), briefSecret: sessionSecret }),
+  });
 }
 
 // DynamoDB in production; in-process for local dev, where there is no table

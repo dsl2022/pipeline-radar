@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import express, { type Request, type Response, type Router } from 'express';
+import { validateContext } from '@pipeline-radar/shared/chat';
 import { checkSameSite, validateHistory, validateMessage } from './guards';
+import { MAX_BRIEF_CHARS, verifyBriefToken } from './brief';
 import { SESSION_COOKIE, newSessionId, signSession, verifySession } from './session';
 import type { Limiter } from './limits';
 import { openSse } from './sse';
@@ -55,10 +57,12 @@ function deny(res: Response, status: number, message: string, gate: string) {
 export function createAgentRouter(config: AgentConfig): Router {
   const router = express.Router();
 
-  // A small body cap in front of the character caps: without it Express would
-  // buffer a multi-megabyte payload before any gate could reject it. Sized for
-  // a max message plus a max history with JSON escaping overhead.
-  router.use(express.json({ limit: '96kb' }));
+  // Small body caps in front of the character caps: without them Express
+  // would buffer a multi-megabyte payload before any gate could reject it.
+  // Per-route because the ceilings differ: a chat turn is a message plus a
+  // bounded history; a brief commit echoes a whole rendered report back.
+  const chatBody = express.json({ limit: '96kb' });
+  const briefBody = express.json({ limit: '256kb' });
 
   // Issued on app load. Not authentication - a stable rate-limiting key that
   // a casual script will not carry, and the thing per-session counters hang
@@ -79,7 +83,7 @@ export function createAgentRouter(config: AgentConfig): Router {
     res.json({ ok: true, issued: !existing });
   });
 
-  router.post('/chat', (req: Request, res: Response) => {
+  router.post('/chat', chatBody, (req: Request, res: Response) => {
     // Gate 1 - identity. Rejected outright rather than falling back to
     // IP-only limiting: a fallback path is just a documented bypass.
     const sessionId = verifySession(readCookie(req.headers.cookie, SESSION_COOKIE), config.sessionSecret);
@@ -96,9 +100,10 @@ export function createAgentRouter(config: AgentConfig): Router {
       return deny(res, 403, 'forbidden', 'same-site');
     }
 
-    // Gate 3 - input shape. The question and the replayed history are both
-    // client-supplied text; each is bounded before anything downstream sees it.
-    const body = req.body as { message?: unknown; history?: unknown } | undefined;
+    // Gate 3 - input shape. The question, the replayed history and the app
+    // context are all client-supplied; each is bounded before anything
+    // downstream sees it.
+    const body = req.body as { message?: unknown; history?: unknown; context?: unknown } | undefined;
     const valid = validateMessage(body?.message);
     if (!valid.ok) {
       return deny(res, 400, valid.reason, 'input');
@@ -106,6 +111,10 @@ export function createAgentRouter(config: AgentConfig): Router {
     const history = validateHistory(body?.history);
     if (!history.ok) {
       return deny(res, 400, history.reason, 'history');
+    }
+    const context = validateContext(body?.context);
+    if (!context.ok) {
+      return deny(res, 400, context.reason, 'context');
     }
 
     // Gate 4 - is there a model at all. Before the limiter on purpose: a
@@ -154,7 +163,7 @@ export function createAgentRouter(config: AgentConfig): Router {
 
       try {
         const outcome = await runner.run(
-          { message: valid.value, history: history.value },
+          { message: valid.value, history: history.value, context: context.value },
           (event, data) => stream.event(event, data),
           gone.signal,
         );
@@ -192,6 +201,49 @@ export function createAgentRouter(config: AgentConfig): Router {
         stream.close();
       }
     })();
+  });
+
+  // The second phase of the two-phase brief (MILESTONE-6-PLAN.md 6.2). The
+  // token was minted by prepare_brief and delivered to the BROWSER on an SSE
+  // event - the model never saw it - so a valid request here can only follow
+  // from the user's click on the preview card. No model call, no limiter
+  // spend: this releases content that was already computed and shown.
+  router.post('/brief/commit', briefBody, (req: Request, res: Response) => {
+    const sessionId = verifySession(readCookie(req.headers.cookie, SESSION_COOKIE), config.sessionSecret);
+    if (!sessionId) {
+      return deny(res, 403, 'session required', 'session');
+    }
+    const sameSite = checkSameSite(
+      { origin: req.headers.origin, referer: req.headers.referer },
+      config.allowedOrigins,
+    );
+    if (!sameSite.ok) {
+      return deny(res, 403, 'forbidden', 'same-site');
+    }
+
+    const body = req.body as { content?: unknown; token?: unknown; filename?: unknown } | undefined;
+    if (typeof body?.content !== 'string' || body.content.length === 0 || body.content.length > MAX_BRIEF_CHARS) {
+      return deny(res, 400, 'invalid brief content', 'brief-input');
+    }
+    if (typeof body.token !== 'string' || body.token.length > 200) {
+      return deny(res, 400, 'invalid brief token', 'brief-input');
+    }
+    if (!verifyBriefToken(body.content, body.token, config.sessionSecret, Date.now())) {
+      // Expired, tampered content, or a forged token - one answer for all
+      // three, same reasoning as deny() everywhere else.
+      return deny(res, 403, 'brief not confirmed', 'brief-token');
+    }
+
+    const filename =
+      typeof body.filename === 'string' && /^[\w.-]{1,120}\.md$/.test(body.filename)
+        ? body.filename
+        : 'pipeline-radar-brief.md';
+    console.log(JSON.stringify({ evt: 'agent.brief_commit', session: sessionId.slice(0, 8), chars: body.content.length }));
+    res
+      .status(200)
+      .type('text/markdown; charset=utf-8')
+      .setHeader('content-disposition', `attachment; filename="${filename}"`)
+      .send(body.content);
   });
 
   return router;

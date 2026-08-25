@@ -38,6 +38,17 @@ describe('applyEvent', () => {
     expect(m.error).toBe('failed');
   });
 
+  it('attaches a brief card, and ignores one missing its token', () => {
+    const withCard = applyEvent(emptyAssistant(), {
+      event: 'brief',
+      data: { filename: 'melanoma-brief.md', markdown: '# Brief', token: 'exp.mac' },
+    });
+    expect(withCard.brief).toEqual({ filename: 'melanoma-brief.md', markdown: '# Brief', token: 'exp.mac' });
+
+    const malformed = applyEvent(emptyAssistant(), { event: 'brief', data: { markdown: '# Brief' } });
+    expect(malformed.brief).toBeUndefined();
+  });
+
   it('marks the message finished on done', () => {
     const m = applyEvent(emptyAssistant(), { event: 'done', data: { stop: 'end_turn' } });
     expect(m.streaming).toBe(false);

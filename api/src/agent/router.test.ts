@@ -3,6 +3,7 @@ import { createApp } from '../app';
 import { createLimiter, DEFAULT_LIMITS } from './limits';
 import { createMemoryStore, type AgentStore } from './store';
 import { SESSION_COOKIE, newSessionId, signSession } from './session';
+import { BRIEF_TOKEN_TTL_MS, signBriefToken } from './brief';
 import type { AgentRunner, RunOutcome } from './runner';
 
 const SECRET = 'test-secret-do-not-use';
@@ -199,6 +200,22 @@ describe('POST /api/agent/chat', () => {
       .set('Origin', ORIGIN)
       .send({ message: 'hello', history });
     expect(res.status).toBe(400);
+  });
+
+  it('accepts a request carrying app context and rejects a malformed one', async () => {
+    const ok = await request(app())
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({ message: 'what changed?', context: { disease: 'melanoma', view: 'drugs' } });
+    expect(ok.status).toBe(200);
+
+    const bad = await request(app())
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({ message: 'hello', context: { view: 'dashboard' } });
+    expect(bad.status).toBe(400);
   });
 
   it('does not disclose which gate rejected the request', async () => {
@@ -418,5 +435,65 @@ describe('rate limits and kill switch on the chat route', () => {
     await request(a).post('/api/agent/chat').set('Origin', ORIGIN).send({ message: 'hi' }); // no cookie
     await request(a).post('/api/agent/chat').set('Cookie', validCookie()).set('Origin', ORIGIN).send({ message: '' });
     expect(bumps).toBe(0);
+  });
+});
+
+describe('POST /api/agent/brief/commit', () => {
+  const T0_NOW = Date.now(); // the endpoint uses the real clock
+  const CONTENT = '# Brief\n\nRendered elsewhere, confirmed here.';
+
+  const commit = (body: unknown, cookie = validCookie()) =>
+    request(app())
+      .post('/api/agent/brief/commit')
+      .set('Cookie', cookie)
+      .set('Origin', ORIGIN)
+      .send(body as object);
+
+  it('releases the file for a valid token', async () => {
+    const token = signBriefToken(CONTENT, SECRET, T0_NOW);
+    const res = await commit({ content: CONTENT, token, filename: 'melanoma-brief.md' });
+    expect(res.status).toBe(200);
+    expect(res.headers['content-disposition']).toContain('melanoma-brief.md');
+    expect(res.text).toBe(CONTENT);
+  });
+
+  // The negatives are the feature: each of these is a way the user's click
+  // could be bypassed or forged.
+  it('refuses without a session cookie', async () => {
+    const token = signBriefToken(CONTENT, SECRET, T0_NOW);
+    const res = await request(app())
+      .post('/api/agent/brief/commit')
+      .set('Origin', ORIGIN)
+      .send({ content: CONTENT, token });
+    expect(res.status).toBe(403);
+  });
+
+  it('refuses content that does not match the token', async () => {
+    const token = signBriefToken(CONTENT, SECRET, T0_NOW);
+    expect((await commit({ content: CONTENT + ' tampered', token })).status).toBe(403);
+  });
+
+  it('refuses an expired token', async () => {
+    const token = signBriefToken(CONTENT, SECRET, T0_NOW - BRIEF_TOKEN_TTL_MS - 60_000);
+    expect((await commit({ content: CONTENT, token })).status).toBe(403);
+  });
+
+  it('refuses a token signed with a different secret', async () => {
+    const token = signBriefToken(CONTENT, 'not-the-secret', T0_NOW);
+    expect((await commit({ content: CONTENT, token })).status).toBe(403);
+  });
+
+  it('rejects malformed bodies', async () => {
+    const token = signBriefToken(CONTENT, SECRET, T0_NOW);
+    expect((await commit({ token })).status).toBe(400);
+    expect((await commit({ content: CONTENT })).status).toBe(400);
+    expect((await commit({ content: '', token })).status).toBe(400);
+  });
+
+  it('falls back to a safe filename when the requested one is hostile', async () => {
+    const token = signBriefToken(CONTENT, SECRET, T0_NOW);
+    const res = await commit({ content: CONTENT, token, filename: '../../etc/passwd"' });
+    expect(res.status).toBe(200);
+    expect(res.headers['content-disposition']).toContain('pipeline-radar-brief.md');
   });
 });

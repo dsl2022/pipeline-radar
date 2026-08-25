@@ -1,4 +1,5 @@
 import { ctgovStudiesUrl, CTGOV_PAGE_SIZE, type CtgovResponse } from '@pipeline-radar/shared/ctgov';
+import { apiBase } from '@pipeline-radar/shared/net';
 import { mapStudy } from '@pipeline-radar/shared/mapStudy';
 import type { Trial } from '@pipeline-radar/shared/types';
 
@@ -25,6 +26,12 @@ export interface TrialSet {
 
 export interface TrialData {
   search(condition: string): Promise<TrialSet>;
+  /**
+   * One study's protocol section, for just-in-time detail (PR 9). List tools
+   * return IDs and one-line summaries; this pulls the full record only for a
+   * trial the agent already holds an ID for.
+   */
+  detail(nctId: string): Promise<unknown>;
 }
 
 export interface TrialDataDeps {
@@ -84,6 +91,8 @@ export function createTrialData(deps: TrialDataDeps = {}): TrialData {
     return value;
   }
 
+  const detailCache = new Map<string, { value: unknown; expiresAt: number }>();
+
   return {
     async search(condition: string): Promise<TrialSet> {
       const key = condition.trim().toLowerCase();
@@ -103,6 +112,23 @@ export function createTrialData(deps: TrialDataDeps = {}): TrialData {
         // was cached and the slot is simply free again.
         inFlight.delete(key);
       }
+    },
+
+    async detail(nctId: string): Promise<unknown> {
+      const hit = detailCache.get(nctId);
+      if (hit && hit.expiresAt > now()) return hit.value;
+
+      // protocolSection only: the results section of a completed trial can be
+      // megabytes, and nothing the agent reports needs it.
+      const res = await doFetch(`${apiBase()}/ctgov/v2/studies/${nctId}?fields=protocolSection`, {
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) {
+        throw new Error(`ClinicalTrials.gov returned ${res.status}`);
+      }
+      const value = await res.json();
+      detailCache.set(nctId, { value, expiresAt: now() + ttlMs });
+      return value;
     },
   };
 }
