@@ -1,6 +1,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableTool';
 import type { ChatContext, ChatTurn } from '@pipeline-radar/shared/chat';
+import { checkCitations, seedKnownIds } from './citations';
 import { systemBlocks } from './prompt';
 import { runInTurnScope } from './turn-scope';
 
@@ -78,6 +79,8 @@ export interface RunOutcome {
   iterations: number;
   toolCalls: string[];
   timedOut: boolean;
+  /** The grounding signal: how many NCT IDs the reply cited, and how many nothing vouched for. */
+  citations: { cited: number; unverified: number };
   usage: {
     input: number;
     output: number;
@@ -146,8 +149,15 @@ export function createAgentRunner(config: RunnerConfig) {
         iterations: 0,
         toolCalls: [],
         timedOut: false,
+        citations: { cited: 0, unverified: 0 },
         usage: { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 },
       };
+
+      // What the user will actually read, accumulated for the citation check.
+      let answer = '';
+      // Seeded from history and context; the tools add every ID their results
+      // surface (see captureCitations in tools.ts).
+      const knownNctIds = seedKnownIds(input.history, input.context);
 
       try {
         // The copilot tools (set_view, prepare_brief, diff_watchlist) need
@@ -155,7 +165,7 @@ export function createAgentRunner(config: RunnerConfig) {
         // deep inside the SDK where neither can be threaded as arguments.
         // AsyncLocalStorage scopes them to THIS turn - concurrent turns on one
         // process do not see each other's browsers.
-        return await runInTurnScope({ context: input.context, emit }, async () => {
+        return await runInTurnScope({ context: input.context, emit, knownNctIds }, async () => {
           const runner = config.client.beta.messages.toolRunner(
             {
               model,
@@ -188,7 +198,10 @@ export function createAgentRunner(config: RunnerConfig) {
 
           for await (const stream of runner) {
             outcome.iterations += 1;
-            stream.on('text', (delta) => emit('delta', { text: delta }));
+            stream.on('text', (delta) => {
+              answer += delta;
+              emit('delta', { text: delta });
+            });
             stream.on('thinking', (delta) => emit('thinking', { text: delta }));
 
             const msg = await stream.finalMessage();
@@ -214,6 +227,15 @@ export function createAgentRunner(config: RunnerConfig) {
             if (msg.stop_reason === 'pause_turn') {
               runner.pushMessages({ role: 'assistant', content: msg.content });
             }
+          }
+
+          // Gate 5, after the loop: hold the reply to what the tools said.
+          // The event goes out before `done` so the panel can mark the chips
+          // while the message is still the one on screen.
+          const check = checkCitations(answer, knownNctIds);
+          outcome.citations = { cited: check.cited, unverified: check.unverified.length };
+          if (check.unverified.length > 0) {
+            emit('citations', { unverified: check.unverified });
           }
 
           return outcome;

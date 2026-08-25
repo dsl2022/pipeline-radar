@@ -18,6 +18,7 @@ import type { Trial } from '@pipeline-radar/shared/types';
 import type { TrialData } from './data';
 import type { Pubmed } from './pubmed';
 import { signBriefToken } from './brief';
+import { extractNctIds } from './citations';
 import { currentTurn } from './turn-scope';
 
 // The agent's entire reach. Four tools, all read-only, all wrapping logic that
@@ -156,6 +157,25 @@ function harden(tool: BetaRunnableTool): BetaRunnableTool {
   custom.strict = true;
   stripUnsupported(custom.input_schema);
   (custom.input_schema as { additionalProperties?: boolean }).additionalProperties = false;
+  return tool;
+}
+
+/**
+ * Every NCT ID a tool result carries is recorded against the turn, and that
+ * record is what the citation checker holds the final reply to. Capturing at
+ * the tool boundary rather than per-tool means a future tool cannot forget to
+ * participate - if its result mentions a trial, the trial is vouched for.
+ */
+function captureCitations(tool: BetaRunnableTool): BetaRunnableTool {
+  const run = tool.run.bind(tool) as (input: never) => Promise<unknown>;
+  (tool as { run: (input: never) => Promise<unknown> }).run = async (input: never) => {
+    const out = await run(input);
+    const known = currentTurn()?.knownNctIds;
+    if (known && typeof out === 'string') {
+      for (const id of extractNctIds(out)) known.add(id);
+    }
+    return out;
+  };
   return tool;
 }
 
@@ -511,5 +531,5 @@ export function createTools(data: TrialData, extras: ToolExtras = {}): BetaRunna
     setView,
     brief,
   ];
-  return tools.map(harden);
+  return tools.map(harden).map(captureCitations);
 }

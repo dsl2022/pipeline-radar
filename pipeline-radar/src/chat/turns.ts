@@ -25,6 +25,8 @@ export interface AssistantMsg {
   notice?: string;
   error?: string;
   brief?: BriefCard;
+  /** NCT IDs the server's citation checker could not resolve to a tool result. */
+  unverified?: string[];
   streaming: boolean;
 }
 
@@ -46,6 +48,12 @@ export function applyEvent(msg: AssistantMsg, ev: SseEvent): AssistantMsg {
       return d.name ? { ...msg, tools: [...msg.tools, d.name] } : msg;
     case 'notice':
       return { ...msg, notice: d.text };
+    case 'citations': {
+      const c = ev.data as { unverified?: unknown };
+      return Array.isArray(c?.unverified)
+        ? { ...msg, unverified: c.unverified.filter((id): id is string => typeof id === 'string') }
+        : msg;
+    }
     case 'brief': {
       const b = ev.data as { filename?: string; markdown?: string; token?: string };
       if (typeof b?.markdown !== 'string' || typeof b?.token !== 'string') return msg;

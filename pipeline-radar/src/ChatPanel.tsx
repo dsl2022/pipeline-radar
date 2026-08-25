@@ -278,7 +278,7 @@ function AssistantBubble({ msg }: { msg: AssistantMsg }) {
         </div>
       )}
       {msg.text.length > 0 ? (
-        <Markdown text={msg.text} />
+        <Markdown text={msg.text} unverified={msg.unverified} />
       ) : msg.streaming ? (
         <p className="chat-waiting">{msg.thinking ? 'Thinking…' : 'Working…'}</p>
       ) : null}
@@ -289,31 +289,31 @@ function AssistantBubble({ msg }: { msg: AssistantMsg }) {
   );
 }
 
-function Markdown({ text }: { text: string }) {
+function Markdown({ text, unverified = [] }: { text: string; unverified?: string[] }) {
   const blocks = parseMarkdown(text);
   return (
     <>
       {blocks.map((b, i) => (
-        <BlockView key={i} block={b} />
+        <BlockView key={i} block={b} unverified={unverified} />
       ))}
     </>
   );
 }
 
-function BlockView({ block }: { block: Block }) {
+function BlockView({ block, unverified }: { block: Block; unverified: string[] }) {
   switch (block.kind) {
     case 'heading':
       // Answers render inside a panel; every heading level maps to the same
       // small bold line rather than page-level h-tags.
       return (
         <p className="chat-heading">
-          <Inlines inlines={block.inlines} />
+          <Inlines inlines={block.inlines} unverified={unverified} />
         </p>
       );
     case 'list': {
       const items = block.items.map((item, i) => (
         <li key={i}>
-          <Inlines inlines={item} />
+          <Inlines inlines={item} unverified={unverified} />
         </li>
       ));
       return block.ordered ? <ol>{items}</ol> : <ul>{items}</ul>;
@@ -326,7 +326,7 @@ function BlockView({ block }: { block: Block }) {
               <tr>
                 {block.header.map((cell, i) => (
                   <th key={i}>
-                    <Inlines inlines={cell} />
+                    <Inlines inlines={cell} unverified={unverified} />
                   </th>
                 ))}
               </tr>
@@ -336,7 +336,7 @@ function BlockView({ block }: { block: Block }) {
                 <tr key={i}>
                   {row.map((cell, j) => (
                     <td key={j}>
-                      <Inlines inlines={cell} />
+                      <Inlines inlines={cell} unverified={unverified} />
                     </td>
                   ))}
                 </tr>
@@ -348,13 +348,13 @@ function BlockView({ block }: { block: Block }) {
     default:
       return (
         <p>
-          <Inlines inlines={block.inlines} />
+          <Inlines inlines={block.inlines} unverified={unverified} />
         </p>
       );
   }
 }
 
-function Inlines({ inlines }: { inlines: Inline[] }) {
+function Inlines({ inlines, unverified = [] }: { inlines: Inline[]; unverified?: string[] }) {
   return (
     <>
       {inlines.map((t, i) => {
@@ -364,6 +364,20 @@ function Inlines({ inlines }: { inlines: Inline[] }) {
           case 'code':
             return <code key={i}>{t.text}</code>;
           case 'nct':
+            // An ID the server's citation checker could not resolve to a tool
+            // result is flagged, not linked: linking a fabricated ID would
+            // dress the hallucination up as a source.
+            if (unverified.includes(t.id)) {
+              return (
+                <span
+                  key={i}
+                  className="chat-nct chat-nct-unverified"
+                  title="This trial ID did not come from any data source this session - treat it as unverified."
+                >
+                  {t.id} (unverified)
+                </span>
+              );
+            }
             // The only anchors the panel ever renders: built from the matched
             // ID, pointing at the canonical registry record. Model-composed
             // URLs stay plain text (see chat/markdown.ts).
