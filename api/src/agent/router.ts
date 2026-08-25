@@ -3,6 +3,8 @@ import express, { type Request, type Response, type Router } from 'express';
 import { validateContext } from '@pipeline-radar/shared/chat';
 import { checkSameSite, validateHistory, validateMessage } from './guards';
 import { MAX_BRIEF_CHARS, verifyBriefToken } from './brief';
+import { NOOP_METRICS, estimateCostUsd, type AgentMetrics } from './metrics';
+import { NOOP_TELEMETRY, type Telemetry } from './telemetry';
 import { SESSION_COOKIE, newSessionId, signSession, verifySession } from './session';
 import type { Limiter } from './limits';
 import { openSse } from './sse';
@@ -17,6 +19,10 @@ export interface AgentConfig {
   limiter: Limiter;
   /** Absent when no API key is configured; /chat then refuses rather than pretending. */
   runner?: AgentRunner;
+  /** Span tree to Langfuse; a no-op when no keys are configured. */
+  telemetry?: Telemetry;
+  /** EMF metrics on stdout for CloudWatch; a no-op only in tests. */
+  metrics?: AgentMetrics;
 }
 
 /**
@@ -47,6 +53,16 @@ function readCookie(header: string | undefined, name: string): string | undefine
   return undefined;
 }
 
+/** A turn that failed before producing anything measurable. */
+const EMPTY_OUTCOME = {
+  stopReason: null,
+  iterations: 0,
+  toolCalls: [],
+  timedOut: false,
+  citations: { cited: 0, unverified: 0 },
+  usage: { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 },
+};
+
 function deny(res: Response, status: number, message: string, gate: string) {
   // The caller gets a category; the gate that fired is ours to know. Telling
   // a prober which check rejected them is free reconnaissance.
@@ -56,6 +72,8 @@ function deny(res: Response, status: number, message: string, gate: string) {
 
 export function createAgentRouter(config: AgentConfig): Router {
   const router = express.Router();
+  const telemetry = config.telemetry ?? NOOP_TELEMETRY;
+  const metrics = config.metrics ?? NOOP_METRICS;
 
   // Small body caps in front of the character caps: without them Express
   // would buffer a multi-megabyte payload before any gate could reject it.
@@ -129,17 +147,33 @@ export function createAgentRouter(config: AgentConfig): Router {
     // cheaper checks above reject junk without spending a DynamoDB write, and
     // a request that fails them should not consume the caller's allowance.
     void (async () => {
+      const fp = fingerprint(valid.value);
+      // The trace starts where money can start being spent. Requests the
+      // cheap gates rejected never open one - they are noise, not turns.
+      const trace = telemetry.turn({
+        'session.hash': sessionId.slice(0, 8),
+        'prompt.hash': fp.hash,
+        'prompt.chars': fp.chars,
+      });
+
       let decision;
+      const budgetSpan = trace.span('gate.budget');
       try {
         decision = await config.limiter.check(sessionId, req.ip ?? 'unknown');
       } catch (err) {
         // The limiter is what stands between an anonymous endpoint and the
         // bill. If it cannot answer, refuse rather than serve unmetered.
+        budgetSpan.recordError(err);
+        budgetSpan.end();
+        trace.end('error', { 'gate.denied': 'limiter-error' });
         console.error(JSON.stringify({ evt: 'agent.limiter_error', err: String(err) }));
         return deny(res, 503, 'temporarily unavailable', 'limiter-error');
       }
+      budgetSpan.end({ 'gate.allowed': decision.allowed, ...(decision.allowed ? {} : { 'gate.scope': decision.scope }) });
 
       if (!decision.allowed) {
+        metrics.blocked(decision.scope);
+        trace.end('error', { 'gate.denied': decision.scope });
         if (decision.retryAfter) res.setHeader('retry-after', String(decision.retryAfter));
         return deny(
           res,
@@ -155,22 +189,37 @@ export function createAgentRouter(config: AgentConfig): Router {
       stream.event('open', { sessionId: sessionId.slice(0, 8) });
 
       const startedAt = Date.now();
-      const fp = fingerprint(valid.value);
       // The client going away aborts the turn: an abandoned tab must stop
       // costing money the moment nobody is reading the answer.
       const gone = new AbortController();
       res.on('close', () => gone.abort());
 
+      // Time to first answer token - the number the user feels.
+      let firstDeltaAt: number | null = null;
+
       try {
         const outcome = await runner.run(
           { message: valid.value, history: history.value, context: context.value },
-          (event, data) => stream.event(event, data),
+          (event, data) => {
+            if (event === 'delta' && firstDeltaAt === null) firstDeltaAt = Date.now();
+            stream.event(event, data);
+          },
           gone.signal,
+          trace,
         );
 
         const note = describeStop(outcome.stopReason, outcome.timedOut);
         if (note) stream.event('notice', { text: note });
         stream.event('done', { stop: outcome.stopReason, truncated: note !== null });
+
+        const ttftMs = firstDeltaAt === null ? null : firstDeltaAt - startedAt;
+        metrics.turn('ok', outcome, ttftMs);
+        trace.end('ok', {
+          'gen_ai.usage.input_tokens': outcome.usage.input,
+          'gen_ai.usage.output_tokens': outcome.usage.output,
+          'chat.iterations': outcome.iterations,
+          'chat.cost_usd': estimateCostUsd(outcome.usage),
+        });
 
         console.log(
           JSON.stringify({
@@ -186,10 +235,14 @@ export function createAgentRouter(config: AgentConfig): Router {
             // failure this log can carry, and the rate feeds the golden set.
             citations: outcome.citations,
             usage: outcome.usage,
+            cost_usd: estimateCostUsd(outcome.usage),
+            ttft_ms: ttftMs,
             ms: Date.now() - startedAt,
           }),
         );
       } catch (err) {
+        metrics.turn('error', EMPTY_OUTCOME, null);
+        trace.end('error');
         console.error(
           JSON.stringify({
             evt: 'agent.turn_error',

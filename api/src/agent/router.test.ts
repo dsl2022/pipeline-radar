@@ -498,3 +498,56 @@ describe('POST /api/agent/brief/commit', () => {
     expect(res.headers['content-disposition']).toContain('pipeline-radar-brief.md');
   });
 });
+
+describe('metrics and tracing hooks', () => {
+  const fakeMetrics = () => {
+    const calls: { kind: string; args: unknown[] }[] = [];
+    return {
+      calls,
+      metrics: {
+        turn: (...args: unknown[]) => calls.push({ kind: 'turn', args }),
+        blocked: (...args: unknown[]) => calls.push({ kind: 'blocked', args }),
+      },
+    };
+  };
+
+  const appWith = (metrics: ReturnType<typeof fakeMetrics>['metrics'], over: Partial<typeof DEFAULT_LIMITS> = {}) => {
+    const now = () => T0;
+    return createApp([], {
+      sessionSecret: SECRET,
+      allowedOrigins: [ORIGIN],
+      runner: stubRunner(),
+      metrics,
+      limiter: createLimiter({ store: createMemoryStore(now), now, limits: { ...DEFAULT_LIMITS, ...over } }),
+    });
+  };
+
+  it('emits a turn metric with cost and logs cost_usd for a clean turn', async () => {
+    const { calls, metrics } = fakeMetrics();
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    await request(appWith(metrics))
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({ message: 'hello there' });
+
+    const written = log.mock.calls.flat().join(' ');
+    log.mockRestore();
+    expect(calls.filter((c) => c.kind === 'turn')).toHaveLength(1);
+    expect(calls[calls.length - 1].args[0]).toBe('ok');
+    expect(written).toContain('"cost_usd"');
+  });
+
+  it('emits a blocked metric with the denying scope on a 429', async () => {
+    const { calls, metrics } = fakeMetrics();
+    const a = appWith(metrics, { sessionPerMinute: 1 });
+    const cookie = validCookie();
+    const post = () =>
+      request(a).post('/api/agent/chat').set('Cookie', cookie).set('Origin', ORIGIN).send({ message: 'hi' });
+    await post();
+    await post();
+    expect(calls.filter((c) => c.kind === 'blocked')).toEqual([
+      { kind: 'blocked', args: ['session-minute'] },
+    ]);
+  });
+});

@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { ChatContext } from '@pipeline-radar/shared/chat';
 import type { Emit } from './runner';
+import type { TurnTrace } from './telemetry';
 
 // Per-turn state the copilot tools need: the app context the client sent, and
 // the SSE emitter for events that must reach the BROWSER without transiting
@@ -21,6 +22,8 @@ export interface TurnScope {
    * this set - an ID outside it is flagged as unverified.
    */
   knownNctIds?: Set<string>;
+  /** The turn's trace; tools hang their spans off it. */
+  trace?: TurnTrace;
 }
 
 const storage = new AsyncLocalStorage<TurnScope>();

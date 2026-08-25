@@ -6,7 +6,9 @@ import { createAgentRouter } from './agent/router';
 import { createLimiter, type Limiter } from './agent/limits';
 import { createDynamoStore, createMemoryStore } from './agent/store';
 import { createTrialData } from './agent/data';
+import { createMetrics, type AgentMetrics } from './agent/metrics';
 import { createPubmed } from './agent/pubmed';
+import { createTelemetry, NOOP_TELEMETRY, type Telemetry } from './agent/telemetry';
 import { createTools } from './agent/tools';
 import { createAgentRunner, type AgentRunner } from './agent/runner';
 
@@ -60,6 +62,10 @@ export interface AppOptions {
   runner?: AgentRunner;
   /** Where the agent's tools send upstream requests. Defaults to this app's own proxy. */
   selfBaseUrl?: string;
+  /** Injected by tests; production builds one from the LANGFUSE_* env vars. */
+  telemetry?: Telemetry;
+  /** Injected by tests; production emits EMF to stdout. */
+  metrics?: AgentMetrics;
 }
 
 export function createApp(
@@ -90,6 +96,8 @@ export function createApp(
         allowedOrigins: options.allowedOrigins ?? allowedOriginsFromEnv(),
         limiter: options.limiter ?? defaultLimiter(),
         runner: options.runner ?? defaultRunner(sessionSecret, options.selfBaseUrl),
+        telemetry: options.telemetry ?? defaultTelemetry(),
+        metrics: options.metrics ?? createMetrics(),
       }),
     );
   } else {
@@ -167,6 +175,24 @@ function defaultRunner(sessionSecret: string, selfBaseUrl?: string): AgentRunner
     client,
     tools: createTools(createTrialData(), { pubmed: createPubmed(), briefSecret: sessionSecret }),
   });
+}
+
+/**
+ * Span-tree tracing to Langfuse, or nothing. Absent keys disable the layer
+ * with one startup line - a turn must never fail, or slow, because an
+ * observability backend cannot be reached.
+ */
+function defaultTelemetry(): Telemetry {
+  const telemetry = createTelemetry({
+    publicKey: process.env.LANGFUSE_PUBLIC_KEY,
+    secretKey: process.env.LANGFUSE_SECRET_KEY,
+    host: process.env.LANGFUSE_HOST,
+  });
+  if (!telemetry.enabled) {
+    console.warn('LANGFUSE_PUBLIC_KEY/LANGFUSE_SECRET_KEY unset - span tracing disabled');
+    return NOOP_TELEMETRY;
+  }
+  return telemetry;
 }
 
 // DynamoDB in production; in-process for local dev, where there is no table

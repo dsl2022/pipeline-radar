@@ -161,20 +161,42 @@ function harden(tool: BetaRunnableTool): BetaRunnableTool {
 }
 
 /**
- * Every NCT ID a tool result carries is recorded against the turn, and that
- * record is what the citation checker holds the final reply to. Capturing at
- * the tool boundary rather than per-tool means a future tool cannot forget to
- * participate - if its result mentions a trial, the trial is vouched for.
+ * The per-call wrapper at the tool boundary, doing two jobs a tool must not
+ * be able to forget:
+ *
+ * Citations - every NCT ID a tool result carries is recorded against the
+ * turn, and that record is what the citation checker holds the final reply
+ * to. If a result mentions a trial, the trial is vouched for.
+ *
+ * Tracing - each execution becomes a tool.* span on the turn's trace, with
+ * duration, result size and error. Only the input's SHAPE is deliberate:
+ * tool inputs echo the user's question, which belongs in the span tree
+ * (Langfuse, controlled access) but is attached here as gen_ai attributes
+ * rather than leaking through any log.
  */
-function captureCitations(tool: BetaRunnableTool): BetaRunnableTool {
+function instrument(tool: BetaRunnableTool): BetaRunnableTool {
   const run = tool.run.bind(tool) as (input: never) => Promise<unknown>;
   (tool as { run: (input: never) => Promise<unknown> }).run = async (input: never) => {
-    const out = await run(input);
-    const known = currentTurn()?.knownNctIds;
-    if (known && typeof out === 'string') {
-      for (const id of extractNctIds(out)) known.add(id);
+    const turn = currentTurn();
+    const span = turn?.trace?.span(`tool.${tool.name}`, {
+      'gen_ai.tool.name': tool.name,
+      'gen_ai.tool.input': JSON.stringify(input).slice(0, 2_000),
+    });
+    try {
+      const out = await run(input);
+      if (typeof out === 'string') {
+        const known = turn?.knownNctIds;
+        if (known) for (const id of extractNctIds(out)) known.add(id);
+        span?.end({ 'tool.result_chars': out.length });
+      } else {
+        span?.end();
+      }
+      return out;
+    } catch (err) {
+      span?.recordError(err);
+      span?.end();
+      throw err;
     }
-    return out;
   };
   return tool;
 }
@@ -531,5 +553,5 @@ export function createTools(data: TrialData, extras: ToolExtras = {}): BetaRunna
     setView,
     brief,
   ];
-  return tools.map(harden).map(captureCitations);
+  return tools.map(harden).map(instrument);
 }

@@ -412,3 +412,51 @@ describe('describeStop', () => {
     expect(describeStop('end_turn', true)).toMatch(/time limit/);
   });
 });
+
+describe('tracing', () => {
+  const fakeTrace = () => {
+    const spans: { name: string; attrs: Record<string, unknown> }[] = [];
+    const rootAttrs: Record<string, unknown> = {};
+    return {
+      spans,
+      rootAttrs,
+      trace: {
+        setAttributes: (a: Record<string, unknown>) => Object.assign(rootAttrs, a),
+        span: (name: string, attrs: Record<string, unknown> = {}) => {
+          const rec = { name, attrs: { ...attrs } };
+          spans.push(rec);
+          return {
+            setAttributes: (a: Record<string, unknown>) => Object.assign(rec.attrs, a),
+            recordError: () => {},
+            end: (a?: Record<string, unknown>) => Object.assign(rec.attrs, a ?? {}),
+          };
+        },
+        end: () => {},
+      },
+    };
+  };
+
+  it('opens llm.call and gate.citation_check spans and carries the texts', async () => {
+    const { client } = fakeClient([{ text: 'the answer, per NCT09999999' }]);
+    const { spans, rootAttrs, trace } = fakeTrace();
+    await createAgentRunner({ client, tools: [] }).run(
+      { message: 'the question' },
+      collect().emit,
+      undefined,
+      trace as never,
+    );
+
+    expect(spans.map((s) => s.name)).toEqual(['llm.call#1', 'gate.citation_check']);
+    const gate = spans.find((s) => s.name === 'gate.citation_check')!;
+    expect(gate.attrs['citation.unverified']).toBe(1);
+    // Full text belongs on the trace (Langfuse), never in any log.
+    expect(rootAttrs['gen_ai.prompt']).toBe('the question');
+    expect(rootAttrs['gen_ai.completion']).toBe('the answer, per NCT09999999');
+  });
+
+  it('runs identically with no trace attached', async () => {
+    const { client } = fakeClient([{ text: 'plain' }]);
+    const out = await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit);
+    expect(out.stopReason).toBe('end_turn');
+  });
+});

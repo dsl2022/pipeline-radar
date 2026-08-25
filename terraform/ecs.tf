@@ -79,10 +79,17 @@ resource "aws_ecs_task_definition" "api" {
     # secrets, not environment: an env var shows up in
     # `aws ecs describe-task-definition` to anyone with read access. The ECS
     # agent resolves this at container start and injects it into the process.
-    secrets = [
-      { name = "ANTHROPIC_API_KEY", valueFrom = data.aws_secretsmanager_secret.anthropic.arn },
-      { name = "SESSION_SECRET", valueFrom = aws_secretsmanager_secret.session.arn },
-    ]
+    secrets = concat(
+      [
+        { name = "ANTHROPIC_API_KEY", valueFrom = data.aws_secretsmanager_secret.anthropic.arn },
+        { name = "SESSION_SECRET", valueFrom = aws_secretsmanager_secret.session.arn },
+      ],
+      # The :key:: suffixes select JSON fields from the one Langfuse secret.
+      var.langfuse_enabled ? [
+        { name = "LANGFUSE_PUBLIC_KEY", valueFrom = "${data.aws_secretsmanager_secret.langfuse[0].arn}:publicKey::" },
+        { name = "LANGFUSE_SECRET_KEY", valueFrom = "${data.aws_secretsmanager_secret.langfuse[0].arn}:secretKey::" },
+      ] : [],
+    )
     logConfiguration = {
       logDriver = "awslogs"
       options = {
