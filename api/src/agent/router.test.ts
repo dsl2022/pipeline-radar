@@ -170,6 +170,37 @@ describe('POST /api/agent/chat', () => {
     expect(res.status).toBe(400);
   });
 
+  it('accepts a question carrying a well-formed history', async () => {
+    const res = await request(app())
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({
+        message: 'and in children?',
+        history: [
+          { role: 'user', text: 'trials for lung cancer?' },
+          { role: 'assistant', text: 'there are 2,460.' },
+        ],
+      });
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('event: done');
+  });
+
+  // History is client-supplied text like the message: same gates, same 400.
+  it.each([
+    ['a non-array', 'not a list'],
+    ['an assistant-led shape', [{ role: 'assistant', text: 'hi' }, { role: 'user', text: 'q' }]],
+    ['a lone user turn', [{ role: 'user', text: 'q' }]],
+    ['control characters', [{ role: 'user', text: 'q\u0000' }, { role: 'assistant', text: 'a' }]],
+  ])('rejects a history with %s', async (_name, history) => {
+    const res = await request(app())
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({ message: 'hello', history });
+    expect(res.status).toBe(400);
+  });
+
   it('does not disclose which gate rejected the request', async () => {
     const res = await request(app())
       .post('/api/agent/chat')
@@ -252,6 +283,27 @@ describe('the model layer', () => {
     // The hash still answers "did this same question fail twice?".
     expect(written).toMatch(/"hash":"[0-9a-f]{16}"/);
     expect(written).toContain(`"chars":${secret.length}`);
+  });
+
+  // History is the user's words too: the log gets a count, never the text.
+  it('never writes the history to the log', async () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    await request(app())
+      .post('/api/agent/chat')
+      .set('Cookie', validCookie())
+      .set('Origin', ORIGIN)
+      .send({
+        message: 'and their sponsors?',
+        history: [
+          { role: 'user', text: 'a question about Northwind' },
+          { role: 'assistant', text: 'an answer about Northwind' },
+        ],
+      });
+
+    const written = log.mock.calls.flat().join(' ');
+    log.mockRestore();
+    expect(written).toContain('"history":2');
+    expect(written).not.toContain('Northwind');
   });
 
   it('does not log the question when the turn fails either', async () => {

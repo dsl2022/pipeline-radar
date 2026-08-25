@@ -97,7 +97,7 @@ describe('per-turn bounds', () => {
   it('sends every documented bound to the API', async () => {
     const { client, captured } = fakeClient([{ text: 'hello' }]);
     const { emit } = collect();
-    await createAgentRunner({ client, tools: [] }).run('hi', emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'hi' }, emit);
 
     const p = captured.params!;
     expect(p.model).toBe('claude-opus-5');
@@ -122,13 +122,13 @@ describe('per-turn bounds', () => {
 
   it('asks for summarized adaptive thinking rather than the silent default', async () => {
     const { client, captured } = fakeClient([{ text: 'hi' }]);
-    await createAgentRunner({ client, tools: [] }).run('hi', collect().emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'hi' }, collect().emit);
     expect(captured.params!.thinking).toEqual({ type: 'adaptive', display: 'summarized' });
   });
 
   it('enables the betas the bounds and fallbacks depend on', async () => {
     const { client, captured } = fakeClient([{ text: 'hi' }]);
-    await createAgentRunner({ client, tools: [] }).run('hi', collect().emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'hi' }, collect().emit);
     expect(captured.params!.betas).toContain('task-budgets-2026-03-13');
     expect(captured.params!.betas).toContain('server-side-fallback-2026-07-01');
     expect(captured.params!.fallbacks).toBe('default');
@@ -138,9 +138,36 @@ describe('per-turn bounds', () => {
   // that never changes.
   it('marks the system prompt as cacheable', async () => {
     const { client, captured } = fakeClient([{ text: 'hi' }]);
-    await createAgentRunner({ client, tools: [] }).run('hi', collect().emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'hi' }, collect().emit);
     const system = captured.params!.system as { cache_control?: unknown }[];
     expect(system[0].cache_control).toEqual({ type: 'ephemeral' });
+  });
+});
+
+describe('conversation history', () => {
+  it('replays the history before the question, in order', async () => {
+    const { client, captured } = fakeClient([{ text: 'hi' }]);
+    await createAgentRunner({ client, tools: [] }).run(
+      {
+        message: 'and in children?',
+        history: [
+          { role: 'user', text: 'trials for lung cancer?' },
+          { role: 'assistant', text: 'there are 2,460.' },
+        ],
+      },
+      collect().emit,
+    );
+    expect(captured.params!.messages).toEqual([
+      { role: 'user', content: 'trials for lung cancer?' },
+      { role: 'assistant', content: 'there are 2,460.' },
+      { role: 'user', content: 'and in children?' },
+    ]);
+  });
+
+  it('sends just the question when there is no history', async () => {
+    const { client, captured } = fakeClient([{ text: 'hi' }]);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit);
+    expect(captured.params!.messages).toEqual([{ role: 'user', content: 'q' }]);
   });
 });
 
@@ -148,14 +175,14 @@ describe('streaming a turn', () => {
   it('emits text deltas as they arrive', async () => {
     const { client } = fakeClient([{ text: 'the answer' }]);
     const { events, emit } = collect();
-    await createAgentRunner({ client, tools: [] }).run('q', emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, emit);
     expect(events).toContainEqual({ event: 'delta', data: { text: 'the answer' } });
   });
 
   it('emits thinking separately from the answer', async () => {
     const { client } = fakeClient([{ thinking: 'weighing it up', text: 'done' }]);
     const { events, emit } = collect();
-    await createAgentRunner({ client, tools: [] }).run('q', emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, emit);
     expect(events).toContainEqual({ event: 'thinking', data: { text: 'weighing it up' } });
   });
 
@@ -167,7 +194,7 @@ describe('streaming a turn', () => {
       { text: 'done' },
     ]);
     const { events, emit } = collect();
-    await createAgentRunner({ client, tools: [] }).run('q', emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, emit);
 
     const toolEvents = events.filter((e) => e.event === 'tool');
     expect(toolEvents).toEqual([{ event: 'tool', data: { name: 'search_trials' } }]);
@@ -179,7 +206,7 @@ describe('streaming a turn', () => {
       { toolUses: [{ name: 'search_trials', input: {} }], stop_reason: 'tool_use', usage: { input_tokens: 10, output_tokens: 5 } },
       { text: 'done', usage: { input_tokens: 20, output_tokens: 7, cache_read_input_tokens: 900 } },
     ]);
-    const out = await createAgentRunner({ client, tools: [] }).run('q', collect().emit);
+    const out = await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit);
     expect(out.iterations).toBe(2);
     expect(out.usage).toEqual({ input: 30, output: 12, cacheRead: 900, cacheCreation: 0 });
     expect(out.toolCalls).toEqual(['search_trials']);
@@ -187,7 +214,7 @@ describe('streaming a turn', () => {
 
   it('reports the stop reason it finished on', async () => {
     const { client } = fakeClient([{ text: 'cut off', stop_reason: 'max_tokens' }]);
-    const out = await createAgentRunner({ client, tools: [] }).run('q', collect().emit);
+    const out = await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit);
     expect(out.stopReason).toBe('max_tokens');
   });
 
@@ -198,7 +225,7 @@ describe('streaming a turn', () => {
       { text: 'partial', stop_reason: 'pause_turn' },
       { text: 'rest' },
     ]);
-    await createAgentRunner({ client, tools: [] }).run('q', collect().emit);
+    await createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit);
     // The paused assistant turn is pushed back so the loop continues, rather
     // than the partial answer being returned as if it were finished.
     expect(captured.pushed).toEqual([
@@ -231,7 +258,7 @@ describe('the turn cannot run forever', () => {
       },
     } as unknown as Anthropic;
 
-    const out = await createAgentRunner({ client, tools: [], wallClockMs: 20 }).run('q', collect().emit);
+    const out = await createAgentRunner({ client, tools: [], wallClockMs: 20 }).run({ message: 'q' }, collect().emit);
     expect(out.timedOut).toBe(true);
     expect(describeStop(out.stopReason, out.timedOut)).toMatch(/time limit/);
   });
@@ -262,7 +289,7 @@ describe('the turn cannot run forever', () => {
     } as unknown as Anthropic;
 
     const out = await createAgentRunner({ client, tools: [], wallClockMs: 60_000 }).run(
-      'q',
+      { message: 'q' },
       collect().emit,
       gone.signal,
     );
@@ -286,7 +313,7 @@ describe('the turn cannot run forever', () => {
       },
     } as unknown as Anthropic;
 
-    await expect(createAgentRunner({ client, tools: [] }).run('q', collect().emit)).rejects.toThrow(
+    await expect(createAgentRunner({ client, tools: [] }).run({ message: 'q' }, collect().emit)).rejects.toThrow(
       'overloaded_error',
     );
   });
