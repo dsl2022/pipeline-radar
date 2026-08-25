@@ -3,6 +3,7 @@ import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableT
 import type { ChatContext, ChatTurn } from '@pipeline-radar/shared/chat';
 import { checkCitations, seedKnownIds } from './citations';
 import { systemBlocks } from './prompt';
+import type { TurnTrace } from './telemetry';
 import { runInTurnScope } from './turn-scope';
 
 // The turn. Everything that bounds one question's cost and wall clock is here.
@@ -132,7 +133,7 @@ export function createAgentRunner(config: RunnerConfig) {
   const wallClockMs = config.wallClockMs ?? WALL_CLOCK_MS;
 
   return {
-    async run(input: TurnInput, emit: Emit, clientGone?: AbortSignal): Promise<RunOutcome> {
+    async run(input: TurnInput, emit: Emit, clientGone?: AbortSignal, trace?: TurnTrace): Promise<RunOutcome> {
       const controller = new AbortController();
       let timedOut = false;
 
@@ -165,7 +166,16 @@ export function createAgentRunner(config: RunnerConfig) {
         // deep inside the SDK where neither can be threaded as arguments.
         // AsyncLocalStorage scopes them to THIS turn - concurrent turns on one
         // process do not see each other's browsers.
-        return await runInTurnScope({ context: input.context, emit, knownNctIds }, async () => {
+        // The full text goes on the trace and nowhere else: spans land in
+        // Langfuse where access is deliberate, while every log line carries
+        // hashes and counts only (MILESTONE-6-PLAN.md 8).
+        trace?.setAttributes({
+          'gen_ai.request.model': model,
+          'gen_ai.prompt': input.message,
+          'chat.history_turns': input.history?.length ?? 0,
+        });
+
+        return await runInTurnScope({ context: input.context, emit, knownNctIds, trace }, async () => {
           const runner = config.client.beta.messages.toolRunner(
             {
               model,
@@ -198,6 +208,9 @@ export function createAgentRunner(config: RunnerConfig) {
 
           for await (const stream of runner) {
             outcome.iterations += 1;
+            const llmSpan = trace?.span(`llm.call#${outcome.iterations}`, {
+              'gen_ai.request.model': model,
+            });
             stream.on('text', (delta) => {
               answer += delta;
               emit('delta', { text: delta });
@@ -205,6 +218,13 @@ export function createAgentRunner(config: RunnerConfig) {
             stream.on('thinking', (delta) => emit('thinking', { text: delta }));
 
             const msg = await stream.finalMessage();
+
+            llmSpan?.end({
+              'gen_ai.usage.input_tokens': msg.usage.input_tokens ?? 0,
+              'gen_ai.usage.output_tokens': msg.usage.output_tokens ?? 0,
+              'gen_ai.usage.cache_read_input_tokens': msg.usage.cache_read_input_tokens ?? 0,
+              'gen_ai.response.finish_reasons': [msg.stop_reason ?? 'unknown'],
+            });
 
             outcome.usage.input += msg.usage.input_tokens ?? 0;
             outcome.usage.output += msg.usage.output_tokens ?? 0;
@@ -232,12 +252,18 @@ export function createAgentRunner(config: RunnerConfig) {
           // Gate 5, after the loop: hold the reply to what the tools said.
           // The event goes out before `done` so the panel can mark the chips
           // while the message is still the one on screen.
+          const gateSpan = trace?.span('gate.citation_check');
           const check = checkCitations(answer, knownNctIds);
           outcome.citations = { cited: check.cited, unverified: check.unverified.length };
+          gateSpan?.end({
+            'citation.cited': check.cited,
+            'citation.unverified': check.unverified.length,
+          });
           if (check.unverified.length > 0) {
             emit('citations', { unverified: check.unverified });
           }
 
+          trace?.setAttributes({ 'gen_ai.completion': answer });
           return outcome;
         });
       } catch (err) {

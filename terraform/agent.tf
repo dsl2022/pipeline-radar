@@ -60,14 +60,26 @@ data "aws_secretsmanager_secret" "anthropic" {
 # The EXECUTION role, not the task role: the ECS agent resolves secrets at
 # container start and injects them, so the running container never needs
 # permission to read Secrets Manager itself.
+# Langfuse project keys for span tracing (PR 11). Hand-created like the
+# Anthropic key, gated behind var.langfuse_enabled so a plan never fails on a
+# secret that has not been created yet. One secret, two JSON keys - the task
+# definition selects publicKey/secretKey out of it.
+data "aws_secretsmanager_secret" "langfuse" {
+  count = var.langfuse_enabled ? 1 : 0
+  name  = "${var.project}/langfuse"
+}
+
 data "aws_iam_policy_document" "execution_secrets" {
   statement {
     effect  = "Allow"
     actions = ["secretsmanager:GetSecretValue"]
-    resources = [
-      data.aws_secretsmanager_secret.anthropic.arn,
-      aws_secretsmanager_secret.session.arn,
-    ]
+    resources = concat(
+      [
+        data.aws_secretsmanager_secret.anthropic.arn,
+        aws_secretsmanager_secret.session.arn,
+      ],
+      var.langfuse_enabled ? [data.aws_secretsmanager_secret.langfuse[0].arn] : [],
+    )
   }
 }
 

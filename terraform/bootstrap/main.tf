@@ -311,6 +311,83 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["*"]
   }
 
+  # PR 11 hand-created secrets, same posture as the Anthropic key: CI resolves
+  # metadata to wire ARNs, never reads a value. The Langfuse keys are read by
+  # the task execution role; the Slack webhook by the forwarder lambda.
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy",
+    ]
+    resources = [
+      "arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/langfuse-*",
+      "arn:${data.aws_partition.current.partition}:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:${var.project}/slack-webhook-*",
+    ]
+  }
+
+  # PR 11 observability: the alert topic, the Slack forwarder lambda, and the
+  # alarms and dashboard over the agent's EMF metrics. Mutations scoped to
+  # this project's names; the Describe/List actions that refuse resource
+  # scoping stay wildcarded, returning metadata only.
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:CreateTopic", "sns:DeleteTopic", "sns:SetTopicAttributes",
+      "sns:GetTopicAttributes", "sns:Subscribe", "sns:Unsubscribe",
+      "sns:ListSubscriptionsByTopic", "sns:TagResource", "sns:UntagResource",
+      "sns:ListTagsForResource",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:sns:*:${data.aws_caller_identity.current.account_id}:${var.project}-*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:CreateFunction", "lambda:DeleteFunction", "lambda:GetFunction",
+      "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
+      "lambda:AddPermission", "lambda:RemovePermission", "lambda:GetPolicy",
+      "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig",
+      "lambda:TagResource", "lambda:UntagResource",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:lambda:*:${data.aws_caller_identity.current.account_id}:function:${var.project}-*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudwatch:PutMetricAlarm", "cloudwatch:DeleteAlarms",
+      "cloudwatch:TagResource", "cloudwatch:UntagResource",
+      "cloudwatch:ListTagsForResource",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:cloudwatch:*:${data.aws_caller_identity.current.account_id}:alarm:${var.project}-*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudwatch:PutDashboard", "cloudwatch:DeleteDashboards",
+      "cloudwatch:GetDashboard",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/${var.project}-*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["cloudwatch:DescribeAlarms", "cloudwatch:ListDashboards"]
+    resources = ["*"]
+  }
+
+  # Metric filters live on the api service's log group, which the deploy role
+  # already manages; the filter actions are additive to that grant.
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:PutMetricFilter", "logs:DeleteMetricFilter", "logs:DescribeMetricFilters",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${var.project}-*"]
+  }
+
   statement {
     effect = "Allow"
     actions = [

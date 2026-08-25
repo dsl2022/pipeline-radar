@@ -33,3 +33,4 @@ override.tf
 override.tf.json
 *_override.tf
 Screenshot*.png
+terraform/lambda/*.zip
