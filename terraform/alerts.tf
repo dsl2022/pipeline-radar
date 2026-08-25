@@ -161,8 +161,11 @@ resource "aws_cloudwatch_metric_alarm" "error_rate" {
   alarm_actions       = [aws_sns_topic.alerts.arn]
 
   metric_query {
-    id          = "rate"
-    expression  = "100 * errors / MAX([errors + oks, 1])"
+    id = "rate"
+    # IF, not MAX([series, scalar]): CloudWatch metric math refuses a mixed
+    # array as an operand ("Unsupported operand type(s) for MAX"), learned
+    # from a live apply. The IF form guards the zero-turn window natively.
+    expression  = "IF((errors + oks) > 0, 100 * errors / (errors + oks), 0)"
     label       = "error rate %"
     return_data = true
   }
