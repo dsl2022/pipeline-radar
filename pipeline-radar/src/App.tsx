@@ -20,6 +20,7 @@ import {
 import { diffSnapshots, loadSnapshot, makeSnapshot, saveSnapshot, type Snapshot } from '@pipeline-radar/shared/watchlist';
 import { ExportBar } from './ExportBar';
 import { WatchlistDiff } from './WatchlistDiff';
+import { ChatPanel } from './ChatPanel';
 import type { Trial } from '@pipeline-radar/shared/types';
 import './App.css';
 
@@ -400,6 +401,8 @@ export default function App() {
           )}
         </>
       )}
+
+      <ChatPanel />
     </main>
   );
 }

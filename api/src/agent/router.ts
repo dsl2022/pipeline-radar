@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import express, { type Request, type Response, type Router } from 'express';
-import { checkSameSite, validateMessage } from './guards';
+import { checkSameSite, validateHistory, validateMessage } from './guards';
 import { SESSION_COOKIE, newSessionId, signSession, verifySession } from './session';
 import type { Limiter } from './limits';
 import { openSse } from './sse';
@@ -55,9 +55,10 @@ function deny(res: Response, status: number, message: string, gate: string) {
 export function createAgentRouter(config: AgentConfig): Router {
   const router = express.Router();
 
-  // A small body cap in front of the character cap: without it Express would
-  // buffer a multi-megabyte payload before any gate could reject it.
-  router.use(express.json({ limit: '64kb' }));
+  // A small body cap in front of the character caps: without it Express would
+  // buffer a multi-megabyte payload before any gate could reject it. Sized for
+  // a max message plus a max history with JSON escaping overhead.
+  router.use(express.json({ limit: '96kb' }));
 
   // Issued on app load. Not authentication - a stable rate-limiting key that
   // a casual script will not carry, and the thing per-session counters hang
@@ -95,11 +96,16 @@ export function createAgentRouter(config: AgentConfig): Router {
       return deny(res, 403, 'forbidden', 'same-site');
     }
 
-    // Gate 3 - input shape.
-    const message = (req.body as { message?: unknown } | undefined)?.message;
-    const valid = validateMessage(message);
+    // Gate 3 - input shape. The question and the replayed history are both
+    // client-supplied text; each is bounded before anything downstream sees it.
+    const body = req.body as { message?: unknown; history?: unknown } | undefined;
+    const valid = validateMessage(body?.message);
     if (!valid.ok) {
       return deny(res, 400, valid.reason, 'input');
+    }
+    const history = validateHistory(body?.history);
+    if (!history.ok) {
+      return deny(res, 400, history.reason, 'history');
     }
 
     // Gate 4 - is there a model at all. Before the limiter on purpose: a
@@ -148,7 +154,7 @@ export function createAgentRouter(config: AgentConfig): Router {
 
       try {
         const outcome = await runner.run(
-          valid.value,
+          { message: valid.value, history: history.value },
           (event, data) => stream.event(event, data),
           gone.signal,
         );
@@ -162,6 +168,7 @@ export function createAgentRouter(config: AgentConfig): Router {
             evt: 'agent.turn',
             session: sessionId.slice(0, 8),
             ...fp,
+            history: history.value.length,
             stop: outcome.stopReason,
             timed_out: outcome.timedOut,
             iterations: outcome.iterations,

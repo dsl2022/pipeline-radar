@@ -1,5 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { BetaRunnableTool } from '@anthropic-ai/sdk/lib/tools/BetaRunnableTool';
+import type { ChatTurn } from '@pipeline-radar/shared/chat';
 import { systemBlocks } from './prompt';
 
 // The turn. Everything that bounds one question's cost and wall clock is here.
@@ -36,6 +37,16 @@ const TASK_BUDGET_BETA = 'task-budgets-2026-03-13';
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 
 export type Emit = (event: string, data: unknown) => void;
+
+/**
+ * One turn's input: the question, plus the session's prior exchanges. History
+ * is validated at the gate (shared/chat.ts) and replayed verbatim — the model
+ * sees the conversation the user saw, nothing reconstructed or summarized.
+ */
+export interface TurnInput {
+  message: string;
+  history?: ChatTurn[];
+}
 
 export interface RunOutcome {
   stopReason: string | null;
@@ -93,7 +104,7 @@ export function createAgentRunner(config: RunnerConfig) {
   const wallClockMs = config.wallClockMs ?? WALL_CLOCK_MS;
 
   return {
-    async run(message: string, emit: Emit, clientGone?: AbortSignal): Promise<RunOutcome> {
+    async run(input: TurnInput, emit: Emit, clientGone?: AbortSignal): Promise<RunOutcome> {
       const controller = new AbortController();
       let timedOut = false;
 
@@ -122,7 +133,13 @@ export function createAgentRunner(config: RunnerConfig) {
             // a frozen prefix, so every turn after the first reads them from
             // cache instead of paying full input price.
             system: systemBlocks(),
-            messages: [{ role: 'user', content: message }],
+            // History precedes the question. It varies per turn, but it sits
+            // after the cached prefix (tools -> system), so replaying it does
+            // not disturb the cache the frozen prefix depends on.
+            messages: [
+              ...(input.history ?? []).map((h) => ({ role: h.role, content: h.text })),
+              { role: 'user', content: input.message },
+            ],
             tools: config.tools,
             max_iterations: maxIterations,
             // The default is "omitted", which streams empty thinking blocks -
