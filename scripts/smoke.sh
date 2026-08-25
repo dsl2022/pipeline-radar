@@ -162,6 +162,17 @@ grep -q '"stop":"end_turn"' /tmp/smoke.body \
 # --- rate limits are enforced ------------------------------------------------
 # Session cap is 5/min. Burn it on a throwaway session so the assertion does
 # not depend on how many turns the checks above happened to use.
+#
+# The window is the UTC minute, and the burn phase takes ~12s (six 2s-capped
+# turns). Started late in a minute, the burns split across two windows and
+# neither reaches the cap - the assertion then fails on timing while the
+# control works. Twice in a row on real deploys, because the pipeline's step
+# durations are consistent enough to keep landing on the boundary. Wait for a
+# fresh window unless enough of this one remains for burns plus assertions.
+SEC=$((10#$(date -u +%S)))
+if [ "$SEC" -gt 35 ]; then
+  sleep $((61 - SEC))
+fi
 BURST="$(new_session)"
 for _ in $(seq 1 6); do burn "$BURST"; done
 # This one runs to completion: a 429 is refused before the model, so it costs
