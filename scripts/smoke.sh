@@ -98,6 +98,14 @@ check "GET / serves the app"            200 "$(code "$BASE/")"
 check "GET /api/ctgov proxies upstream" 200 "$(code "$BASE/api/ctgov/v2/studies?pageSize=1")"
 check "SPA route is served"             200 "$(code "$BASE/trials")"
 
+# The demo guide's clean path must bypass the SPA rewrite - review caught it
+# serving the app shell. Edge routing is only testable live, so this is the
+# assertion that keeps it honest (same lesson as the 404-rewrite check below).
+check "demo guide serves at /demo-guide" 200 "$(code "$BASE/demo-guide")"
+grep -q 'Demo Guide' /tmp/smoke.body 2>/dev/null \
+  && pass "demo guide is the guide, not the app shell" \
+  || fail "demo guide is the guide, not the app shell" "Demo Guide title" "app shell or other"
+
 # --- CloudFront does not disguise API errors ---------------------------------
 # The SPA fallback used to rewrite 403/404 to 200 /index.html for the whole
 # distribution, which silently turned every agent denial into a success.

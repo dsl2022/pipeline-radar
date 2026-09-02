@@ -166,6 +166,12 @@ resource "aws_cloudfront_function" "spa_rewrite" {
       // /api/* should never reach it. Cheap insurance if that ever changes.
       if (uri.startsWith('/api/')) return request;
 
+      // Static pages published at clean extensionless paths - real S3 keys
+      // that must bypass the SPA rewrite. Review caught the original miss:
+      // without this, /demo-guide silently served the app shell and the S3
+      // object was unreachable dead weight.
+      if (uri === '/demo-guide') return request;
+
       // Anything with an extension is a real object - let S3 answer, including
       // answering 404 for a genuinely missing asset.
       var last = uri.substring(uri.lastIndexOf('/') + 1);
