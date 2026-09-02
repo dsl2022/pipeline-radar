@@ -110,6 +110,21 @@ resource "aws_s3_object" "web" {
   content_type = lookup(local.content_types, lower(reverse(split(".", each.value))[0]), "application/octet-stream")
 }
 
+# The interviewer-facing demo guide at a clean, shareable /demo-guide. A
+# second key for the same file: the for_each above serves it at
+# /demo-guide.html by extension, but an extensionless key would fall through
+# the content-type lookup to octet-stream and download instead of render -
+# so this object pins text/html explicitly.
+resource "aws_s3_object" "demo_guide_clean_path" {
+  count = fileexists("${local.dist_dir}/demo-guide.html") ? 1 : 0
+
+  bucket       = aws_s3_bucket.web.id
+  key          = "demo-guide"
+  source       = "${local.dist_dir}/demo-guide.html"
+  etag         = filemd5("${local.dist_dir}/demo-guide.html")
+  content_type = "text/html"
+}
+
 # --- distribution ------------------------------------------------------------
 
 data "aws_cloudfront_cache_policy" "optimized" {
@@ -150,6 +165,12 @@ resource "aws_cloudfront_function" "spa_rewrite" {
       // Defensive: this function is only attached to the S3 behaviour, so
       // /api/* should never reach it. Cheap insurance if that ever changes.
       if (uri.startsWith('/api/')) return request;
+
+      // Static pages published at clean extensionless paths - real S3 keys
+      // that must bypass the SPA rewrite. Review caught the original miss:
+      // without this, /demo-guide silently served the app shell and the S3
+      // object was unreachable dead weight.
+      if (uri === '/demo-guide') return request;
 
       // Anything with an extension is a real object - let S3 answer, including
       // answering 404 for a genuinely missing asset.
