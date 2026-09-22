@@ -9,6 +9,6 @@
   "scripts": {
     "build:shared": "npm run build -w @pipeline-radar/shared",
     "test": "npm test --workspaces --if-present",
-    "build": "npm run build -w @pipeline-radar/shared && npm run build -w pipeline-radar-api && npm run build -w pipeline-radar"
+    "build": "node api.js && npm run build -w @pipeline-radar/shared && npm run build -w pipeline-radar-api && npm run build -w pipeline-radar"
   }
 }
